@@ -254,19 +254,6 @@ pre.ref { white-space: pre-wrap; font-size: 13px; color: var(--muted); margin: 8
 .probs li { padding: 7px 10px; border-radius: 8px; background: var(--chip); }
 .probs .err { color: var(--warn); font-weight: 700; } .probs .warn { color: var(--ink2); } .probs .ok { color: var(--ok); font-weight: 700; }
 .banner { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-/* просмотр готового PDF на телефоне: листы во весь экран, «Готово» и «Сохранить или отправить» */
-.pvw { position: fixed; inset: 0; z-index: 70; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg2); color: var(--ink); }
-.pvw-top, .pvw-bar { display: flex; align-items: center; gap: 12px; background: var(--bar); padding: calc(8px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); }
-.pvw-top { border-bottom: 1px solid var(--line); }
-.pvw-top span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--muted); text-align: center; }
-.pvw-top .linkb { font-weight: 700; font-size: 16px; }
-.pvw-top::after { content: ""; width: 52px; }
-.pvw-bar { border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
-.pvw-bar .btn { flex: 1; justify-content: center; padding-block: 12px; }
-.pvw-scroll { overflow: auto; overscroll-behavior: contain; padding: 12px; }
-.pvw-fit { overflow: hidden; }
-.pvw .pages { gap: 16px; }
-html.noscroll, html.noscroll body { overflow: hidden; }
 .upd { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 61; display: flex; align-items: center; gap: 14px; background: var(--ink); color: var(--bg); padding: 8px 8px 8px 16px; border-radius: 12px; font-size: 14px; white-space: nowrap; box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); }
 .toast { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); }
 .edit-links { display: flex; gap: 14px; justify-content: flex-end; margin-top: 6px; font-size: 13px; }
@@ -330,6 +317,8 @@ html { background: var(--bg); }
 <script>
 (() => {
 // Настройка сайта: ключ Google Drive API (в консоли Google ограничен адресом сайта и только Drive API) и адрес сайта для ссылок «поделиться»
+// Версия сайта: исправление — +0.0.1, новая возможность — +0.1.0. Поднимать при каждой выкладке, история — docs/05-tools.md
+const VERSION = "1.5.1";
 const CONFIG = { driveKey: "AIzaSyBNtYHwkI9bE6d7V0TnHEMMbKZCoSr49As", site: "https://faworship.github.io/" };
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -746,7 +735,7 @@ function pageHome() {
       <input type="file" id="h-input" hidden>
       <div class="h2"><span>Недавние</span>${rec.length ? '<button class="linkb" id="h-clear">Очистить</button>' : ""}</div>
       <ul class="rows">${rec.map(recentRow).join("") || '<li class="empty">Здесь появятся чарты, которые ты открывал на этом устройстве.</li>'}</ul>
-      <div class="about"><span>Сайт ничего не хранит: чарты открываются с Google Диска по ссылке. Настройки и «Недавние» — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho). Версия ${BUILD}</span></div>
+      <div class="about"><span>Сайт ничего не хранит: чарты открываются с Google Диска по ссылке. Настройки и «Недавние» — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho). Версия ${VERSION}</span></div>
     </div></div>` + prefsSheet();
   $("#prefb").onclick = () => { ui.sheet = "prefs"; render(); };
   $("#h-drive").onsubmit = (ev) => { ev.preventDefault(); openDriveLink($("#h-link").value); };
@@ -1334,7 +1323,7 @@ function pagePrint(info, opts) {
       </div>
       <div class="pv-sw"><div class="tgl"><span>MD-пометки</span><button class="sw" role="switch" data-pv="md" aria-checked="${P.md}" aria-label="MD-пометки"></button></div>
         <div class="tgl"><span>Карта песни</span><button class="sw" role="switch" data-pv="map" aria-checked="${P.map}" aria-label="Карта песни"></button></div></div>
-      <p class="hint" style="margin:0">${phone() ? `«Скачать PDF» открывает файл «${esc(pdfName)}.pdf» для просмотра, там — «Сохранить или отправить»: Файлы, Telegram, AirDrop, печать.`
+      <p class="hint" style="margin:0">${phoneShare() ? `«Скачать PDF» открывает меню «Поделиться»: «Сохранить в Файлы», Telegram, AirDrop, печать. Файл — «${esc(pdfName)}.pdf», листы A4, как ниже.`
         : `«Скачать PDF» сохраняет файл «${esc(pdfName)}.pdf» — листы A4, как ниже.`}${window.claude ? " В превью на claude.ai PDF не скачивается." : ""}</p>
       <div class="paper-fit" id="pfit"><div class="pages" id="pages"></div></div>
     </div>`;
@@ -1507,39 +1496,31 @@ async function pdfFile() {
   pdf.setTitle(pdfName); pdf.setCreator("faworship.github.io"); pdf.setProducer("Faworship Charts"); pdf.setLanguage("ru");
   return pdf.save();
 }
-// На телефоне готовый PDF открывается просмотром во весь экран (на iPhone скачанный файл открывался вкладкой, и было неясно, как его сохранить),
-// а «Сохранить или отправить» там открывает меню «Поделиться» — отдельным нажатием, поэтому браузер его не блокирует. На компьютере — скачивание.
-const phone = () => matchMedia("(pointer: coarse)").matches;
+// На телефоне — меню «Поделиться» (на iPhone скачанный PDF открывается вкладкой, и неясно, как его сохранить), на компьютере — скачивание.
+// Меню открывается только сразу после нажатия: программа для PDF и шрифты грузятся заранее, а если сборка всё же затянулась
+// и браузер меню не дал — готовый файл ждёт второго нажатия («Сохранить PDF»).
+const phoneShare = () => matchMedia("(pointer: coarse)").matches && !!navigator.canShare;
 const preloadPdf = () => { if ($("#pages")) [...PDF_JS.map(loadJs), ...Object.entries(FACES).flatMap(([f, ws]) => ws.map((w) => loadFont(`${f}-${w}`)))].forEach((x) => x.catch(() => {})); };
+let pdfReady = null; // { at: адрес с настройками, file }
 async function downloadPdf(btn) {
   if (btn.disabled) return;
+  const at = location.hash;
+  if (pdfReady && pdfReady.at === at && phoneShare()) return sharePdf(pdfReady.file, btn);
   btn.disabled = true; btn.textContent = "Готовлю…";
   try {
     const file = new File([await pdfFile()], pdfName + ".pdf", { type: "application/pdf" });
-    if (phone()) pdfViewer(file); else { saveBlob(file.name, file); toast(`Скачано: ${file.name}`); }
+    if (phoneShare() && navigator.canShare({ files: [file] })) { pdfReady = { at, file }; await sharePdf(file, btn); }
+    else { saveBlob(file.name, file); toast(`Скачано: ${file.name}`); }
   } catch (e) { toast((e && e.message) || "Не получилось сделать PDF"); }
-  finally { btn.disabled = false; btn.textContent = "Скачать PDF"; }
+  finally { btn.disabled = false; if (btn.textContent === "Готовлю…") btn.textContent = "Скачать PDF"; }
 }
-// листы те же, что в PDF (файл собран из них), — копия превью во весь экран
-function pdfViewer(file) {
-  const share = !!(navigator.canShare && navigator.canShare({ files: [file] }));
-  const box = document.createElement("div"); box.className = "pvw"; box.setAttribute("role", "dialog"); box.setAttribute("aria-label", file.name);
-  box.innerHTML = `<div class="pvw-top"><button class="linkb" data-x>Готово</button><span>${esc(file.name)}</span></div>
-    <div class="pvw-scroll"><div class="pvw-fit"><div class="pages"></div></div></div>
-    <div class="pvw-bar"><button class="btn" data-sh>${share ? "Сохранить или отправить" : "Скачать файл"}</button></div>`;
-  const pages = box.querySelector(".pages"), fit = box.querySelector(".pvw-fit");
-  pages.append(...[...$("#pages").children].map((p) => p.cloneNode(true)));
-  document.body.appendChild(box); document.documentElement.classList.add("noscroll");
-  const size = () => { const k = Math.min(1, fit.clientWidth / pages.offsetWidth); pages.style.transform = `scale(${k})`; fit.style.height = `${pages.offsetHeight * k}px`; };
-  size();
-  const close = () => { box.remove(); document.documentElement.classList.remove("noscroll"); removeEventListener("resize", size); removeEventListener("keydown", onKey); };
-  const onKey = (ev) => { if (ev.key === "Escape") close(); };
-  addEventListener("resize", size); addEventListener("keydown", onKey);
-  box.querySelector("[data-x]").onclick = close;
-  box.querySelector("[data-sh]").onclick = async () => {
-    if (!share) return saveBlob(file.name, file);
-    try { await navigator.share({ files: [file] }); } catch (e) { if (e && e.name !== "AbortError") saveBlob(file.name, file); }
-  };
+async function sharePdf(file, btn) {
+  try { await navigator.share({ files: [file] }); btn.textContent = "Скачать PDF"; }
+  catch (e) {
+    if (e && e.name === "AbortError") return; // закрыли меню
+    if (e && e.name === "NotAllowedError") { btn.textContent = "Сохранить PDF"; toast("PDF готов — нажми «Сохранить PDF»"); return; }
+    saveBlob(file.name, file); toast(`Скачано: ${file.name}`);
+  }
 }
 // для tools/pdf.py (#print/…~out=b64): PDF в base64 — в <pre id="pdf-b64">, headless Chrome отдаёт его через --dump-dom
 async function pdfB64() {
@@ -1592,22 +1573,17 @@ document.addEventListener("visibilitychange", () => { if (S.stage && document.vi
 // ---------- маршруты ----------
 // ---------- новая версия сайта ----------
 // Сайт — одна страница: открытая вкладка живёт со старым кодом, пока её не перезагрузят, а браузер ещё и держит копию в кэше.
-// Когда вкладка снова на экране (и раз в 10 минут), код страницы сверяется с сайтом; если он другой — плашка «Обновить».
-const codeHash = (doc) => {
-  const s = [...doc.querySelectorAll("style, script:not([src])")].map((e) => e.textContent).join("");
-  let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
-  return h.toString(36);
-};
-const BUILD = codeHash(document);
+// Когда вкладка снова на экране (и раз в 10 минут), версия страницы сверяется с сайтом; если на сайте новее — плашка «Обновить».
 let updAt = Date.now();
 async function checkUpdate() {
   if (window.claude || location.protocol === "file:" || Date.now() - updAt < 5 * 60000 || $(".upd")) return;
   updAt = Date.now();
   try {
     const html = await (await fetch(location.pathname, { cache: "no-store" })).text();
-    if (codeHash(new DOMParser().parseFromString(html, "text/html")) === BUILD) return;
+    const v = (/const VERSION = "([\d.]+)"/.exec(html) || [])[1];
+    if (!v || v === VERSION) return;
     const bar = document.createElement("div"); bar.className = "upd";
-    bar.innerHTML = '<span>Вышла новая версия сайта</span><button class="btn">Обновить</button>';
+    bar.innerHTML = `<span>Вышла версия ${esc(v)}</span><button class="btn">Обновить</button>`;
     bar.querySelector("button").onclick = () => location.reload();
     document.body.appendChild(bar);
   } catch {}
