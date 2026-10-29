@@ -821,13 +821,17 @@ function pageSong(info, q) {
 
   $$("[data-go]").forEach((b) => b.onclick = () => {
     const el = document.getElementById(b.dataset.go); if (!el) return;
-    const off = $(".cbar").offsetHeight + 8;
-    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-    // подсветка — когда прокрутка докатилась (scrollend есть не везде, поэтому и по таймеру)
+    const off = $(".cbar").offsetHeight + 8, r = el.getBoundingClientRect();
+    const to = Math.max(0, Math.min(r.top + window.scrollY - off, document.documentElement.scrollHeight - window.innerHeight));
+    window.scrollTo({ top: to, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    // подсветка: секция уже видна целиком или ехать некуда — сразу; иначе когда прокрутка докатилась (scrollend есть не везде, поэтому и по таймеру)
     let done = false;
     const flash = () => { if (done) return; done = true; el.classList.remove("hl"); void el.offsetWidth; el.classList.add("hl"); setTimeout(() => el.classList.remove("hl"), 2000); };
-    if ("onscrollend" in window) window.addEventListener("scrollend", flash, { once: true });
-    setTimeout(flash, 650);
+    if ((r.top >= off && r.bottom <= window.innerHeight) || Math.abs(to - window.scrollY) < 2) flash();
+    else {
+      if ("onscrollend" in window) window.addEventListener("scrollend", flash, { once: true });
+      setTimeout(flash, 650);
+    }
   });
   $("#keyb").onclick = () => { ui.sheet = "key"; render(); };
   $("#moreb").onclick = () => { ui.sheet = "more"; render(); };
