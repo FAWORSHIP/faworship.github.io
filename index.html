@@ -1,0 +1,1370 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Faworship Charts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Lato:wght@400;700;900&display=swap">
+<style>
+/* Layout: home screen (open by Drive link or file, recent charts); chart screen with a sticky header bar and the song map, one column on phones, two columns of outlined section boxes on wide screens; editor; A4 print page */
+:root {
+  --bg: #FFFFFF; --bg2: #F2F2F6; --card: #FFFFFF; --ink: #121214; --ink2: #2A2A2E; --muted: #8B8B91; --line: #E4E4E9; --box: #C9CACF;
+  --chip: #EEEEF1; --accent: #2F6FEB; --accent-ink: #FFFFFF; --slash: #E2513A; --bar: rgba(255, 255, 255, 0.94); --scrim: rgba(0, 0, 0, 0.32);
+  --s-intro: #2B6E73; --s-verse: #4E4794; --s-pre: #977A24; --s-chorus: #964D26; --s-post: #2F634A; --s-turn: #527A29; --s-bridge: #83434E; --s-inter: #813A35; --s-plain: #6B6B73;
+  --ok: #23845A; --warn: #B06A00;
+  --font: "Lato", "Carlito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs: 1;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1E1F21; --bg2: #141416; --card: #26272A; --ink: #F3F3F5; --ink2: #E2E2E6; --muted: #9A9AA1; --line: #34353A; --box: #4A4B51;
+  --chip: #303135; --accent: #4D8DFF; --accent-ink: #FFFFFF; --slash: #FF6B52; --bar: rgba(30, 31, 33, 0.94); --scrim: rgba(0, 0, 0, 0.55);
+  --s-intro: #52A6AC; --s-verse: #8F87E2; --s-pre: #D3AF4C; --s-chorus: #DB7A42; --s-post: #52A27B; --s-turn: #8BB85A; --s-bridge: #C76F7D; --s-inter: #CA625A; --s-plain: #9A9AA1;
+  --ok: #4CC38A; --warn: #F0B640; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #1E1F21; --bg2: #141416; --card: #26272A; --ink: #F3F3F5; --ink2: #E2E2E6; --muted: #9A9AA1; --line: #34353A; --box: #4A4B51;
+  --chip: #303135; --accent: #4D8DFF; --accent-ink: #FFFFFF; --slash: #FF6B52; --bar: rgba(30, 31, 33, 0.94); --scrim: rgba(0, 0, 0, 0.55);
+  --s-intro: #52A6AC; --s-verse: #8F87E2; --s-pre: #D3AF4C; --s-chorus: #DB7A42; --s-post: #52A27B; --s-turn: #8BB85A; --s-bridge: #C76F7D; --s-inter: #CA625A; --s-plain: #9A9AA1;
+  --ok: #4CC38A; --warn: #F0B640; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.4; -webkit-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bar); }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap { width: 100%; max-width: 46rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+svg { display: block; flex: none; }
+.muted { color: var(--muted); }
+
+/* ---------- значки секций ---------- */
+.t-intro { --sc: var(--s-intro); } .t-verse { --sc: var(--s-verse); } .t-pre { --sc: var(--s-pre); } .t-chorus { --sc: var(--s-chorus); }
+.t-post { --sc: var(--s-post); } .t-turn { --sc: var(--s-turn); } .t-bridge { --sc: var(--s-bridge); } .t-inter { --sc: var(--s-inter); } .t-plain { --sc: var(--s-plain); }
+.bdg { position: relative; flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1.75px solid var(--sc); color: var(--sc); background: transparent; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; letter-spacing: -0.01em; padding: 0; }
+.bdg sup { position: absolute; top: -5px; right: -4px; font-size: 11px; line-height: 1; font-weight: 900; color: var(--ink); background: var(--bar); padding: 1px 1px 2px 2px; border-radius: 4px; }
+.bdg.sm { width: 26px; height: 26px; font-size: 11.5px; border-width: 1.5px; }
+.bdg.sm sup { font-size: 9.5px; top: -4px; right: -5px; background: var(--bg); }
+
+/* ---------- аккорды ---------- */
+.ch { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.ch sup { font-size: 0.68em; line-height: 0; position: relative; top: -0.05em; vertical-align: super; margin-left: 0.02em; }
+.ch .pre { margin-right: 0.04em; margin-left: 0; }
+
+/* ---------- экран песни ---------- */
+.cbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bar); -webkit-backdrop-filter: saturate(1.6) blur(14px); backdrop-filter: saturate(1.6) blur(14px); border-bottom: 1px solid var(--line); }
+.cbar-row { display: flex; align-items: center; gap: 6px; padding-block: 8px; min-width: 0; }
+.ib { width: 36px; height: 36px; border: 0; background: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--ink); margin-left: -8px; }
+.ctitle { border: 0; background: none; display: flex; align-items: center; gap: 6px; padding: 4px 2px; min-width: 0; flex: 1; font-size: 19px; font-weight: 400; letter-spacing: -0.01em; text-align: left; }
+.ctitle span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ctitle svg { color: var(--muted); }
+.sq { min-width: 36px; height: 34px; padding: 0 10px; border-radius: 8px; border: 0; background: var(--chip); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 400; }
+.sq .ch { font-weight: 400; }
+.sq small { font-size: 11px; color: var(--muted); margin-left: 4px; }
+.map { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-top: 4px; padding-bottom: 10px; }
+.map::-webkit-scrollbar { display: none; }
+.map .bdg { background: var(--bar); }
+
+
+.info { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 14px; padding-top: 14px; font-size: 13px; color: var(--muted); }
+.info b { font-weight: 700; color: var(--muted); }
+.info .v { color: var(--ink2); margin-right: 10px; }
+.flag { margin-top: 6px; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--muted); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+.pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); }
+
+.chart { padding-block: 10px 6px; font-size: calc(17px * var(--fs)); }
+.sec { padding-top: 22px; }
+.sh { display: flex; align-items: center; gap: 10px; }
+.sh .sl { font-size: calc(14px * var(--fs)); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
+.sh::after { content: ""; flex: 1; height: 1px; background: var(--sc); opacity: 0.55; }
+.md { text-align: right; color: var(--muted); font-size: calc(14px * var(--fs)); line-height: 1.35; margin-top: 6px; }
+.body { padding-top: 4px; }
+.ln { margin-top: 0.62em; line-height: 1.25; word-spacing: 0.14em; color: var(--ink2); }
+.w { white-space: nowrap; }
+.a { display: inline-block; position: relative; }
+.a .c { display: block; line-height: 1.25; word-spacing: 0; }
+.a.tight .c { padding-right: 0.5em; }
+.a.hy::after { content: "-"; position: absolute; left: var(--hx); bottom: 0; transform: translateX(-50%); color: var(--muted); }
+.co { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25em 0.9em; color: var(--ink); }
+.co .sl { color: var(--slash); font-weight: 700; font-style: normal; letter-spacing: 0.06em; }
+.co .bl { color: var(--box); font-weight: 400; }
+.co .gb { display: inline-flex; gap: 0.35em; align-items: baseline; }
+.blank { height: 0.6em; }
+.cmt { margin-top: 0.6em; color: var(--muted); font-style: italic; }
+
+@media (min-width: 820px) {
+  .chartwrap { max-width: 68rem; }
+  .chart { columns: 2; column-gap: 34px; padding-top: 6px; }
+  /* рамка рисуется внутри блока секции: с отрицательным отступом заголовок уезжал в соседний столбец */
+  .sec { position: relative; break-inside: avoid; -webkit-column-break-inside: avoid; page-break-inside: avoid; padding: 2px 16px 16px; margin-top: 16px; display: flow-root; }
+  .sec::before { content: ""; position: absolute; inset: 15px 0 0; border: 1px solid var(--box); border-radius: 12px; pointer-events: none; }
+  .sh { position: relative; z-index: 1; width: fit-content; margin-left: -6px; }
+  .sh .bdg, .sh .sl { background: var(--bg); }
+  .sh .sl { padding-right: 8px; }
+  .sh::after { display: none; }
+  .sh .bdg { box-shadow: 0 0 0 5px var(--bg); }
+  .chart > .sec:first-child { margin-top: 0; }
+}
+
+.cfoot { padding-block: 26px 10px; display: grid; gap: 3px; justify-items: end; text-align: right; font-size: 12px; color: var(--muted); }
+details.check { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 15px; }
+details.check summary { cursor: pointer; font-weight: 700; }
+details.check ul { padding-left: 1.2rem; margin: 10px 0; display: grid; gap: 4px; }
+
+/* ---------- листы настроек ---------- */
+.sheet { position: fixed; inset: 0; z-index: 40; background: var(--scrim); display: flex; align-items: center; justify-content: center; padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.sheet-panel { width: min(100%, 30rem); max-height: 100%; overflow-y: auto; background: var(--bg); border-radius: 16px; padding: 0 18px 20px; box-shadow: 0 16px 48px rgb(0 0 0 / 0.28); }
+.sheet-h { position: sticky; top: 0; background: var(--bg); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 16px 10px; z-index: 1; }
+.sheet-h b { font-size: 17px; font-weight: 700; text-align: center; }
+.done { justify-self: end; border: 0; background: none; color: var(--accent); font-weight: 700; font-size: 17px; padding: 4px 0; }
+.grp { margin-top: 18px; }
+.grp > label, .grp > .lab { display: block; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink2); margin-bottom: 8px; }
+.selw { position: relative; display: flex; align-items: center; }
+.selw select { appearance: none; -webkit-appearance: none; width: 100%; padding: 11px 40px 11px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); font-size: 16px; }
+.selw svg { position: absolute; right: 14px; pointer-events: none; color: var(--muted); }
+.tgl { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; border-bottom: 1px solid var(--line); font-size: 16px; }
+.tgl small { display: block; font-size: 12.5px; color: var(--muted); }
+.sw { flex: none; width: 51px; height: 31px; border-radius: 999px; border: 0; background: var(--line); position: relative; transition: background 0.15s; padding: 0; }
+.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgb(0 0 0 / 0.25); transition: transform 0.15s; }
+.sw[aria-checked="true"] { background: var(--accent); }
+.sw[aria-checked="true"]::after { transform: translateX(20px); }
+.stepper { display: flex; align-items: center; gap: 14px; }
+.stepper button { width: 44px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); font-size: 17px; }
+.stepper b { min-width: 3.5rem; text-align: center; font-variant-numeric: tabular-nums; }
+.keys { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.keys button { height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); font-size: 17px; position: relative; }
+.keys button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.keys button[aria-pressed="true"] .ch { color: var(--accent-ink); }
+.keys .ch { font-weight: 700; }
+.keys .mark { position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; opacity: 0.55; }
+.hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.linkb { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 700; }
+.segc { display: flex; background: var(--chip); border-radius: 9px; padding: 2px; gap: 2px; }
+.segc button { flex: 1; border: 0; background: none; padding: 7px 6px; border-radius: 7px; font-size: 14px; font-weight: 700; color: var(--ink2); }
+.segc button[aria-pressed="true"] { background: var(--card); box-shadow: 0 1px 3px rgb(0 0 0 / 0.15); color: var(--ink); }
+
+/* ---------- списки ---------- */
+.screen { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+.lhead { padding-block: calc(22px + env(safe-area-inset-top, 0px)) 6px; display: grid; gap: 12px; }
+.lhead h1 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.01em; }
+.search { display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 10px; padding: 0 12px; color: var(--muted); }
+.search input { flex: 1; border: 0; background: none; padding: 10px 0; font-size: 16px; color: var(--ink); outline: none; min-width: 0; }
+.rows { list-style: none; margin: 0; padding: 0; }
+.row a { display: grid; grid-template-columns: 56px 1fr auto; gap: 0 14px; align-items: center; padding-block: 10px; }
+.row .txt { min-width: 0; border-bottom: 1px solid var(--line); align-self: stretch; display: grid; align-content: center; gap: 2px; padding-block: 2px 10px; }
+.row .side { border-bottom: 1px solid var(--line); align-self: stretch; display: grid; align-content: center; justify-items: end; gap: 2px; padding: 2px 0 10px; color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+.row .side .ch { font-weight: 400; color: var(--muted); }
+.row:last-child .txt, .row:last-child .side { border-bottom-color: transparent; }
+.row .t { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .s { font-size: 15px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile { width: 56px; height: 56px; border-radius: 5px; background: linear-gradient(135deg, var(--c1), var(--c2)); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 19px; letter-spacing: 0.02em; overflow: hidden; }
+.empty { padding: 24px 0; color: var(--muted); text-align: center; }
+
+.about { margin-top: 28px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+/* ---------- редактор ---------- */
+.lhead-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 9px; padding: 8px 14px; font-weight: 700; font-size: 15px; background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: var(--chip); color: var(--ink); }
+.edwrap { max-width: 76rem; }
+.ed { display: grid; gap: 20px; padding-block: 12px 48px; }
+.ed-tabs { margin-top: 12px; }
+@media (max-width: 899px) { .ed[data-tab="edit"] .ed-prev, .ed[data-tab="prev"] .ed-text { display: none; } }
+@media (min-width: 900px) {
+  .ed { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .ed-tabs { display: none; }
+  .ed-prev { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 64px); max-height: calc(100vh - 80px); overflow-y: auto; border-left: 1px solid var(--line); padding-left: 20px; }
+}
+.ed-prev .chart { columns: 1; }
+.meta-f { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.meta-f label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.meta-f input, .meta-f select { font-size: 16px; font-weight: 400; text-transform: none; letter-spacing: 0; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); min-width: 0; }
+.meta-f .wide { grid-column: 1 / -1; }
+.tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.tool { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg2); border-radius: 9px; padding: 6px 10px; font-size: 14px; font-weight: 700; color: var(--ink); }
+.tool .bdg.sm { width: 20px; height: 20px; font-size: 9px; border-width: 1.25px; }
+.pal .tool { min-width: 48px; justify-content: center; font-size: 15px; }
+.ed .rawta { display: block; width: 100%; min-height: 60vh; margin-top: 12px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; line-height: 1.55; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); resize: vertical; tab-size: 2; }
+.fs { margin-top: 20px; }
+.lab2 { display: block; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink2); margin-bottom: 8px; }
+.mstrip { display: flex; flex-wrap: wrap; gap: 10px 8px; padding-top: 4px; }
+.mlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mrow { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto auto; align-items: center; gap: 8px; padding: 5px 8px 5px 4px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line); }
+.mrow.dragging { box-shadow: 0 8px 24px rgb(0 0 0 / 0.22); border-color: var(--accent); position: relative; z-index: 2; }
+.mrow .md-in { grid-column: 3 / -1; }
+.grip { touch-action: none; cursor: grab; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; min-width: 40px; min-height: 40px; margin: -4px -2px -4px -4px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.mrow { touch-action: pan-y; }
+.mrow.dragging { transition: none; cursor: grabbing; }
+.sq:disabled { opacity: 0.35; cursor: default; }
+.sq svg { color: var(--ink); }
+.mrow.dragging .grip { cursor: grabbing; }
+.mlabel { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mlabel .bad { color: var(--warn); font-weight: 700; }
+.stp { display: inline-flex; align-items: center; background: var(--chip); border-radius: 8px; }
+.stp button { width: 32px; height: 32px; border: 0; background: none; font-size: 18px; color: var(--ink); }
+.stp button:disabled { opacity: 0.35; cursor: default; }
+.stp b { min-width: 2.2em; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; }
+.mnote { border: 1px solid var(--line); background: none; border-radius: 7px; font-size: 11px; font-weight: 700; padding: 5px 6px; color: var(--muted); }
+.mnote.on { color: var(--accent); border-color: var(--accent); }
+.mx { border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+.mx.sure { color: var(--warn); font-size: 13px; font-weight: 700; }
+.md-in { width: 100%; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 14px; }
+.pal-bar { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 53px); z-index: 6; background: var(--bg); padding-block: 10px 8px; margin-top: 16px; border-bottom: 1px solid var(--line); }
+.scards { display: grid; gap: 12px; }
+.scard { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 12px; display: grid; gap: 8px; }
+.scard-h { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.scard-h .selw { flex: 0 1 auto; min-width: 0; }
+.scard-h .selw select { width: auto; max-width: 100%; padding: 6px 30px 6px 10px; font-weight: 700; font-size: 15px; background: var(--bg2); }
+.scard-h .num { width: 3.6em; padding: 6px 8px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); font-size: 15px; }
+.scard textarea { width: 100%; min-height: 3.2em; resize: none; overflow: hidden; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 15px; line-height: 1.55; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); }
+.scard .md-in { background: var(--bg2); }
+.grow { flex: 1; }
+.addsec { margin-top: 12px; }
+.cat { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; margin-top: 10px; }
+.cat button { display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; align-items: center; text-align: left; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); }
+.cat button .bdg { grid-row: span 2; }
+.cat b { font-size: 14px; } .cat small { font-size: 12px; color: var(--muted); }
+pre.ref { white-space: pre-wrap; font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+.probs { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; font-size: 14px; }
+.probs li { padding: 7px 10px; border-radius: 8px; background: var(--chip); }
+.probs .err { color: var(--warn); font-weight: 700; } .probs .warn { color: var(--ink2); } .probs .ok { color: var(--ok); font-weight: 700; }
+.banner { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.toast { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); }
+.edit-links { display: flex; gap: 14px; justify-content: flex-end; margin-top: 6px; font-size: 13px; }
+.edit-links a { color: var(--accent); font-weight: 700; }
+
+/* ---------- главная ---------- */
+html { background: var(--bg); }
+.dform { display: flex; gap: 8px; }
+.dform input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); font-size: 16px; }
+.acts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 18px; }
+.act { display: grid; grid-template-columns: auto 1fr; gap: 1px 12px; align-items: center; text-align: left; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); }
+.act svg { grid-row: span 2; width: 24px; height: 24px; color: var(--accent); }
+.act b { font-size: 16px; } .act small { font-size: 13px; color: var(--muted); }
+.h2 { display: flex; justify-content: space-between; align-items: baseline; margin: 30px 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink2); }
+.h2 .linkb { text-transform: none; letter-spacing: 0; font-size: 14px; }
+.notice { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--chip); font-size: 14px; display: grid; gap: 8px; justify-items: start; }
+.notice.bad b { color: var(--warn); }
+.notice small { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+/* ---------- PDF ---------- */
+.pv { display: grid; gap: 16px; padding-block: 14px 60px; }
+.pv-opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 12px; }
+.pv-opts .grp { margin: 0; }
+.pv-sw { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+.pv-sw .tgl { border: 0; gap: 10px; }
+.paper-fit { width: 100%; overflow: hidden; }
+.paper {
+  --bg: #FFFFFF; --bg2: #F2F2F6; --ink: #121214; --ink2: #2A2A2E; --muted: #8B8B91; --line: #E4E4E9; --box: #C9CACF; --chip: #EEEEF1; --bar: #FFFFFF; --slash: #E2513A;
+  --s-intro: #2B6E73; --s-verse: #4E4794; --s-pre: #977A24; --s-chorus: #964D26; --s-post: #2F634A; --s-turn: #527A29; --s-bridge: #83434E; --s-inter: #813A35; --s-plain: #6B6B73;
+  --fs: 0.78; color-scheme: light; background: var(--bg); color: var(--ink);
+  width: 794px; padding: 44px 46px 36px; transform-origin: top left; box-shadow: 0 4px 30px rgb(0 0 0 / 0.18); border-radius: 3px;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.ph { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.pt { font-size: 26px; font-weight: 900; line-height: 1.1; }
+.pa { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.pk { display: flex; gap: 14px; font-size: 11.5px; color: var(--muted); white-space: nowrap; padding-top: 10px; }
+.pk b { color: var(--muted); }
+.pk .ch { color: var(--ink2); font-weight: 400; }
+.pmap { display: flex; flex-wrap: wrap; gap: 9px 8px; margin-top: 14px; }
+.pchart { font-size: calc(17px * var(--fs)); margin-top: 6px; }
+.pchart.c2 { columns: 2; column-gap: 26px; }
+.paper .sec { position: relative; break-inside: avoid; -webkit-column-break-inside: avoid; page-break-inside: avoid; padding: 2px 14px 13px; margin-top: 14px; display: flow-root; }
+.paper .sec::before { content: ""; position: absolute; inset: 15px 0 0; border: 1px solid var(--box); border-radius: 11px; pointer-events: none; }
+.paper .sh { position: relative; z-index: 1; width: fit-content; margin-left: -6px; }
+.paper .sh .bdg, .paper .sh .sl { background: var(--bg); }
+.paper .sh .sl { padding-right: 8px; }
+.paper .sh::after { display: none; }
+.paper .sh .bdg { box-shadow: 0 0 0 5px var(--bg); }
+.pfoot { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; font-size: 10.5px; color: var(--muted); }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body { background: #FFFFFF !important; }
+  body::before { display: none !important; }
+  #app > :not(.pv), .pv > :not(.paper-fit), .toast { display: none !important; }
+  .pv { padding: 0 !important; max-width: none !important; }
+  .paper-fit { height: auto !important; overflow: visible !important; }
+  .paper { transform: none !important; width: auto !important; padding: 0 !important; box-shadow: none !important; border-radius: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .sw, .sw::after { transition: none; } }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+(() => {
+// Настройка сайта: ключ Google Drive API (в консоли Google ограничен адресом сайта и только Drive API) и адрес сайта для ссылок «поделиться»
+const CONFIG = { driveKey: "", site: "https://faworship.github.io/" };
+
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ---------- иконки ----------
+const I = {
+  back: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4.5 7.5 12l7.5 7.5"/></svg>',
+  caret: '<svg viewBox="0 0 12 12" width="11" height="11"><path d="M2 4h8L6 9z" fill="currentColor"/></svg>',
+  dots: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>',
+  chev: '<svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>',
+  note: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>',
+  file: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  link: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>',
+};
+
+// ---------- настройки (только на этом устройстве) ----------
+const DEF = { view: "cl", ctype: "letters", notation: "ru", sections: "full", showMap: true, showMD: true, stage: false, size: 0, theme: "system" };
+const S = (() => { try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem("fw-chart") || "{}")); } catch { return { ...DEF }; } })();
+const save = () => { try { localStorage.setItem("fw-chart", JSON.stringify(S)); } catch {} };
+
+// ---------- аккорды ----------
+const RU = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "H"];
+const INT_S = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const INT_F = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, H: 11, B: 11 }; // B = H (си), си-бемоль — Bb или A#
+const DEG = ["1", "♭2", "2", "♭3", "3", "4", "♯4", "5", "♭6", "6", "♭7", "7"];
+const ROM = ["I", "♭II", "II", "♭III", "III", "IV", "♯IV", "V", "♭VI", "VI", "♭VII", "VII"];
+const CHORD_RE = /(^|[^A-Za-z#])([A-H])(#|b)?((?:maj|min|dim|aug|sus|add|m|M)?\d*(?:sus\d*|add\d*)?)(?:\/([A-H])(#|b)?)?(?![a-z])/g;
+const mod = (n) => ((n % 12) + 12) % 12;
+const pcOf = (l, acc) => mod(PC[l] + (acc === "#" ? 1 : acc === "b" ? -1 : 0));
+const ACC = { "#": "♯", b: "♭" };
+
+function parseKey(s) {
+  const m = /^\s*([A-H])(#|b)?(m(?!aj))?/.exec(s || "");
+  return m ? { pc: pcOf(m[1], m[2]), minor: !!m[3] } : null;
+}
+const flatKey = (k) => [5, 10, 3, 8, 1].includes(mod(k.minor ? k.pc + 3 : k.pc));
+const noteName = (pc, flats) => (S.notation === "int" ? (flats ? INT_F : INT_S) : RU)[mod(pc)];
+function noteHTML(name) { return esc(name[0]) + (name[1] ? `<sup>${ACC[name[1]]}</sup>` : ""); }
+function keyHTML(k) { return `<span class="ch">${noteHTML(noteName(k.pc, flatKey(k)))}${k.minor ? "m" : ""}</span>`; }
+
+// ctx: { shift — на сколько сдвинуть, key — тональность, в которой показываем (после capo) }
+function chordHTML(m, ctx) {
+  const [, , l, acc, q0, bl, bacc] = m;
+  const root = mod(pcOf(l, acc) + ctx.shift);
+  const bass = bl ? mod(pcOf(bl, bacc) + ctx.shift) : null;
+  const tonic = mod(ctx.key.minor ? ctx.key.pc + 3 : ctx.key.pc);
+  let q = q0, head;
+  const minor = /^m(?!aj)/.test(q);
+  const deg = (pc, table) => { const d = table[mod(pc - tonic)]; return /^[♭♯]/.test(d) ? `<sup class="pre">${d[0]}</sup>${d.slice(1)}` : d; };
+  if (S.ctype === "numbers") head = deg(root, DEG);
+  else if (S.ctype === "roman") { head = deg(root, ROM); if (minor) { head = head.toLowerCase(); q = q.replace(/^m/, ""); } q = q.replace(/^dim/, "°"); }
+  else head = noteHTML(noteName(root, flatKey(ctx.key)));
+  const qm = /^m(?!aj)/.test(q) ? "m" : "";
+  const rest = q.slice(qm.length);
+  const bassH = bass === null ? "" : "/" + (S.ctype === "numbers" ? deg(bass, DEG) : S.ctype === "roman" ? deg(bass, ROM) : noteHTML(noteName(bass, flatKey(ctx.key))));
+  return `<span class="ch">${head}${qm}${rest ? `<sup>${esc(rest)}</sup>` : ""}${bassH}</span>`;
+}
+function rich(str, ctx) {
+  let out = "", last = 0, m;
+  CHORD_RE.lastIndex = 0;
+  while ((m = CHORD_RE.exec(str))) {
+    out += esc(str.slice(last, m.index) + m[1]) + chordHTML(m, ctx);
+    last = CHORD_RE.lastIndex;
+  }
+  return out + esc(str.slice(last));
+}
+const plainLen = (str, ctx) => { const d = document.createElement("div"); d.innerHTML = rich(str, ctx); return d.textContent.length; };
+
+// ---------- ChordPro ----------
+const TYPES = [[/count/, "intro", "Ci"], [/pre/, "pre", "Pc"], [/post/, "post", "Po"], [/intro|вступ/, "intro", "I"], [/verse|куплет/, "verse", "V"],
+  [/chorus|припев/, "chorus", "C"], [/bridge|бридж/, "bridge", "B"], [/interlude/, "inter", "It"], [/instr|проигр/, "inter", "In"], [/turn/, "turn", "Ta"],
+  [/tag/, "chorus", "Tg"], [/break/, "post", "Bd"], [/build/, "bridge", "Bu"], [/vamp/, "inter", "Vp"], [/refrain/, "post", "Rf"], [/solo|соло/, "inter", "So"],
+  [/\brap\b/, "bridge", "Rp"], [/ad.?lib|спонт/, "turn", "Ad"], [/ending|оконч/, "intro", "E"], [/outro/, "intro", "O"], [/coda|кода/, "intro", "Cd"]];
+function secType(label, env) {
+  const l = label.toLowerCase();
+  for (const [re, t, a] of TYPES) if (re.test(l)) return { type: t, abbr: a + ((/\d+/.exec(label) || [""])[0]) };
+  const t = { grid: "inter", chorus: "chorus", bridge: "bridge" }[env] || "verse";
+  return { type: t, abbr: label.slice(0, 2) };
+}
+function parseLine(line) {
+  const parts = line.split(/\[([^\]]*)\]/);
+  const segs = [{ chord: null, text: parts[0] }];
+  for (let i = 1; i < parts.length; i += 2) segs.push({ chord: parts[i], text: parts[i + 1] || "" });
+  if (segs.every((s) => /^[\s|]*$/.test(s.text)) && segs.some((s) => s.chord)) {
+    const items = [];
+    segs.forEach((s) => { if (s.chord) items.push({ chord: s.chord }); if (s.text.includes("|")) items.push({ bar: true }); });
+    return { kind: "chords", items };
+  }
+  return { kind: "lyric", segs: segs.filter((s) => s.chord || s.text) };
+}
+const choCache = {};
+function parseCho(text, fresh) {
+  if (!fresh && choCache[text]) return choCache[text];
+  const song = { meta: {}, sections: [], map: [] };
+  let cur = null;
+  for (const raw of text.split("\n")) {
+    const line = raw.replace(/\s+$/, "");
+    const d = /^\{(\w+)(?::\s*(.*))?\}$/.exec(line);
+    if (d) {
+      const [, nm, arg = ""] = d;
+      if (/^(start_of_|so[cvbgt]$)/.test(nm)) {
+        const env = nm.replace("start_of_", "");
+        const label = (/label="([^"]*)"/.exec(arg) || [])[1] || arg || env;
+        cur = { label, env, ...secType(label, env), lines: [], md: [] };
+        song.sections.push(cur);
+      } else if (/^(end_of_|eo[cvbgt]$)/.test(nm)) cur = null;
+      else if (nm === "meta") { const m = /^(\S+)\s+(.*)$/.exec(arg); if (m) song.meta[m[1]] = m[2]; }
+      else if ((nm === "comment" || nm === "c") && cur) {
+        if (/^MD:/i.test(arg)) cur.md.push(arg.replace(/^MD:\s*/i, ""));
+        else cur.lines.push({ kind: "comment", text: arg });
+      } else song.meta[nm] = arg;
+      continue;
+    }
+    if (!cur || /^\s*#/.test(line)) continue;
+    if (cur.env === "grid") {
+      if (line.trim()) cur.lines.push({ kind: "grid", bars: line.split("|").map((b) => b.trim()).filter(Boolean).map((b) => b.split(/\s+/)) });
+      continue;
+    }
+    cur.lines.push(line.trim() ? parseLine(line) : { kind: "blank" });
+  }
+  const entries = []; let depth = 0, buf = "";
+  for (const ch of (song.meta.map || "") + ",") {
+    if (ch === "(") depth++; if (ch === ")") depth--;
+    if (ch === "," && !depth) { if (buf.trim()) entries.push(buf.trim()); buf = ""; } else buf += ch;
+  }
+  song.map = entries.length ? entries.map((e) => {
+    const m = /^(.*?)(?:\s*[x×](\d+))?\s*(?:\((.*)\))?$/.exec(e);
+    const nm = m[1].trim().toLowerCase();
+    const sec = song.sections.find((x) => x.label.toLowerCase() === nm) || song.sections.find((x) => x.label.toLowerCase().startsWith(nm));
+    return { sec, times: +(m[2] || 1), note: (m[3] || "").replace(/^MD:\s*/i, "") };
+  }).filter((o) => o.sec) : song.sections.map((sec) => ({ sec, times: 1, note: "" }));
+  return fresh ? song : (choCache[text] = song);
+}
+
+// ---------- отрисовка чарта ----------
+function lyricHTML(line, ctx) {
+  if (S.view === "ly") return `<div class="ln">${esc(line.segs.map((s) => s.text).join(""))}</div>`;
+  if (S.view === "co") {
+    const cs = line.segs.filter((s) => s.chord);
+    return cs.length ? `<div class="ln co">${cs.map((s) => `<span>${rich(s.chord, ctx)}</span>`).join("")}</div>` : "";
+  }
+  const words = []; let cur = [];
+  for (const seg of line.segs) {
+    let pending = seg.chord;
+    for (const tok of seg.text.split(/(\s+)/)) {
+      if (!tok && pending == null) continue;
+      if (/^\s+$/.test(tok)) {
+        if (pending != null) { cur.push({ chord: pending, text: "" }); pending = null; }
+        if (cur.length) { words.push(cur); cur = []; }
+        words.push(" ");
+      } else { cur.push({ chord: pending, text: tok }); pending = null; }
+    }
+    if (pending != null) cur.push({ chord: pending, text: "" });
+  }
+  if (cur.length) words.push(cur);
+  // отступ справа у аккорда — только если следующий аккорд ближе, чем ширина этого
+  let pos = 0; const anchors = [];
+  for (const w of words) for (const p of w === " " ? [{ text: " " }] : w) { if (p.chord != null) anchors.push([p, pos]); pos += p.text.length; }
+  anchors.forEach(([p, at], i) => { p.tight = i + 1 < anchors.length && anchors[i + 1][1] - at <= plainLen(p.chord, ctx) + 1; });
+  return `<div class="ln">${words.map((w) => w === " " ? " " : `<span class="w">${w.map((p, i) => p.chord == null ? esc(p.text)
+    : `<span class="a${p.tight ? " tight" : ""}${i < w.length - 1 ? " mid" : ""}"><span class="c">${rich(p.chord, ctx)}</span><span class="x">${esc(p.text) || "&nbsp;"}</span></span>`).join("")}</span>`).join("")}</div>`;
+}
+function gridHTML(l, ctx) {
+  return `<div class="ln co">${l.bars.map((b) => {
+    const chords = b.filter((t) => t !== "/" && t !== ".").map((t) => rich(t, ctx)).join(" ");
+    const sl = b.filter((t) => t === "/" || t === ".").length;
+    return `<span class="gb">${chords}${sl ? `<i class="sl">${"/".repeat(sl)}</i>` : ""}</span>`;
+  }).join('<span class="bl">|</span>')}</div>`;
+}
+function bodyHTML(sec, ctx) {
+  if (S.view === "ly" && sec.env === "grid") return "";
+  const out = sec.lines.map((l) => {
+    if (l.kind === "grid") return gridHTML(l, ctx);
+    if (l.kind === "blank") return S.view === "co" ? "" : `<div class="blank"></div>`;
+    if (l.kind === "comment") return `<div class="cmt">${esc(l.text)}</div>`;
+    if (l.kind === "chords") return S.view === "ly" ? "" : `<div class="ln co">${l.items.map((i) => i.bar ? '<span class="bl">|</span>' : `<span>${rich(i.chord, ctx)}</span>`).join("")}</div>`;
+    return lyricHTML(l, ctx);
+  }).join("");
+  return out ? `<div class="body">${out}</div>` : "";
+}
+function secHTML(sec, ctx, { id, times = 1, notes = [], headerOnly = false }) {
+  const md = S.showMD ? [...sec.md, ...notes].filter(Boolean) : [];
+  return `<section class="sec t-${sec.type}" id="${id}">
+    <div class="sh"><span class="bdg sm">${esc(sec.abbr)}${times > 1 ? `<sup>${times}</sup>` : ""}</span><span class="sl">${esc(sec.label)}</span></div>
+    ${md.length ? `<div class="md">${md.map(esc).join("<br>")}</div>` : ""}
+    ${headerOnly ? "" : bodyHTML(sec, ctx)}</section>`;
+}
+function chartHTML(song, ctx) {
+  if (S.view === "map") return song.map.map((o, k) => secHTML(o.sec, ctx, { id: `o-${k}`, times: o.times, notes: [o.note], headerOnly: true })).join("");
+  if (S.sections === "condensed") {
+    const seen = new Set();
+    return song.map.map((o, k) => { const h = seen.has(o.sec); seen.add(o.sec); return secHTML(o.sec, ctx, { id: `o-${k}`, times: o.times, notes: [o.note], headerOnly: h }); }).join("");
+  }
+  return song.map.map((o, k) => Array.from({ length: o.times }, (_, j) =>
+    secHTML(o.sec, ctx, { id: j ? `o-${k}-${j}` : `o-${k}`, notes: j ? [] : [o.note] })).join("")).join("");
+}
+
+// ---------- плитки ----------
+const PAL = [["#2B6E73", "#5BB0B6"], ["#4E4794", "#8F87E2"], ["#977A24", "#D9B24E"], ["#964D26", "#E0814A"], ["#2F634A", "#5BAF86"], ["#527A29", "#93C062"], ["#83434E", "#CF7684"], ["#813A35", "#D46A61"]];
+function tile(title, cls = "tile") {
+  let h = 0; for (const c of title) h = (h * 31 + c.codePointAt(0)) >>> 0;
+  const [c1, c2] = PAL[h % PAL.length];
+  const ini = title.replace(/[^\p{L}\p{N} ]/gu, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+  return `<span class="${cls}" style="--c1:${c1};--c2:${c2}" aria-hidden="true">${esc(ini)}</span>`;
+}
+const when = (at) => new Date(at).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+// ---------- откуда чарт: Google Диск, файл с устройства, ссылка с чартом внутри, пример ----------
+// маршруты: #<slug>.<id файла на Диске>?key=D · #file/<id> · #t/<сжатый чарт> · #demo · #edit/<…> · #print/<…>~опции
+const TR = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s",
+  т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sch", ъ: "-", ы: "y", ь: "-", э: "e", ю: "yu", я: "ya" };
+const slug = (s) => [...String(s).toLowerCase()].map((c) => TR[c] ?? c).join("").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const titleOf = (text) => ((/^\{(?:title|t):\s*(.*?)\}\s*$/m.exec(text) || [])[1] || "").trim();
+const driveRoute = (text, id) => { const s = slug(titleOf(text)); return s ? `${s}.${id}` : id; };
+const FROM = { drive: "Google Диск", file: "файл на этом устройстве", link: "чарт из ссылки", demo: "пример" };
+const DEMO = `{title: Amazing Grace}
+{artist: John Newton, 1779}
+{key: G}
+{tempo: 72}
+{time: 3/4}
+{meta: status draft}
+{meta: source Пример — гимн в общественном достоянии}
+{meta: map Intro, Verse 1, Verse 2, Instrumental (MD: только клавиши), Verse 3 x2 (MD: на 2-й раз все громче), Ending}
+
+{start_of_grid: label="Intro"}
+| G / / | C / / | G / / | D / / |
+{end_of_grid}
+
+{start_of_verse: label="Verse 1"}
+A[G]mazing [G7]grace, how [C]sweet the [G]sound
+That saved a wretch like [D]me
+I [G]once was [G7]lost, but [C]now am [G]found
+Was [Em]blind, but [D]now I [G]see
+{end_of_verse}
+
+{start_of_verse: label="Verse 2"}
+'Twas [G]grace that [G7]taught my [C]heart to [G]fear
+And grace my fears re[D]lieved
+How [G]precious [G7]did that [C]grace ap[G]pear
+The [Em]hour I [D]first be[G]lieved
+{end_of_verse}
+
+{start_of_grid: label="Instrumental"}
+| G / / | G7 / / | C / / | G / / |
+| G / / | D / / | G / / | / / / |
+{end_of_grid}
+
+{start_of_verse: label="Verse 3"}
+{comment: MD: бас — половинными}
+Through [G]many [G7]dangers, [C]toils and [G]snares
+I have already [D]come
+'Tis [G]grace hath [G7]brought me [C]safe thus [G]far
+And [Em]grace will [D]lead me [G]home
+{end_of_verse}
+
+{start_of_grid: label="Ending"}
+| G / / | D / / | G / / | / / / |
+{end_of_grid}
+`;
+
+function srcInfo(r) {
+  let m;
+  if (r === "demo") return { key: "demo", from: "demo", route: r };
+  if (r === "new") return { key: "new", from: "new", route: r };
+  if ((m = /^file\/(\w+)$/.exec(r))) return { key: "f:" + m[1], from: "file", route: r };
+  if ((m = /^t\/([uz][\w-]+)$/.exec(r))) return { key: "t:" + m[1], from: "link", route: r, data: m[1] };
+  if ((m = /^(?:[a-z0-9-]*\.)?([\w-]{20,})$/.exec(r))) return { key: "d:" + m[1], from: "drive", route: r, id: m[1] };
+  return null;
+}
+
+// недавние — только в этом браузере, вместе с копией текста: открываются и без связи
+const RECENT = "fw-recent";
+function recent() { try { return JSON.parse(localStorage.getItem(RECENT) || "[]"); } catch { return []; } }
+const recentGet = (key) => recent().find((r) => r.key === key);
+function remember(info, text, route = info.route) {
+  const head = (k) => ((new RegExp(`^\\{${k}:\\s*(.*?)\\}\\s*$`, "m").exec(text) || [])[1] || "").trim();
+  const r = { key: info.key, route, from: info.from, title: titleOf(text) || "Без названия", artist: head("artist"), songKey: head("key"), text, at: Date.now() };
+  try { localStorage.setItem(RECENT, JSON.stringify([r, ...recent().filter((x) => x.key !== info.key)].slice(0, 30))); } catch {}
+}
+
+// Google Диск: файл с доступом «Все, у кого есть ссылка» читается по ключу API без входа в аккаунт
+async function driveText(id) {
+  if (!CONFIG.driveKey) throw { msg: "На сайте ещё не задан ключ Google Drive API, поэтому файлы с Диска пока не открываются. Скачай .cho и открой его файлом." };
+  let r;
+  try { r = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media&supportsAllDrives=true&key=${CONFIG.driveKey}`); }
+  catch { throw { msg: "Нет связи с Google Диском." }; }
+  if (r.ok) return await r.text();
+  let detail = ""; try { detail = (await r.json()).error.message || ""; } catch {}
+  if (r.status === 404) throw { msg: "Файл не найден. Либо у него закрыт доступ по ссылке, либо его удалили или загрузили заново — тогда у файла новый адрес и нужна новая ссылка.", detail };
+  if (/export/i.test(detail)) throw { msg: "Это Google Документ, а не файл .cho.", detail };
+  if (r.status === 403) throw { msg: "Google Диск отказал в доступе. Проверь доступ к файлу: «Все, у кого есть ссылка».", detail };
+  throw { msg: `Google Диск ответил ошибкой ${r.status}.`, detail };
+}
+
+// чарт прямо в ссылке: deflate + base64url (z…), без сжатия — u…
+const b64u = {
+  enc: (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); },
+  dec: (str) => Uint8Array.from(atob(str.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)),
+};
+async function pack(text) {
+  const raw = new TextEncoder().encode(text);
+  if (!window.CompressionStream) return "u" + b64u.enc(raw);
+  const buf = await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer();
+  return "z" + b64u.enc(new Uint8Array(buf));
+}
+async function unpack(data) {
+  let bytes;
+  try { bytes = b64u.dec(data.slice(1)); } catch { throw { msg: "Ссылка повреждена — возможно, её обрезал мессенджер." }; }
+  if (data[0] === "u") return new TextDecoder().decode(bytes);
+  if (!window.DecompressionStream) throw { msg: "Этот браузер не открывает такие ссылки — обнови его." };
+  try { return await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text(); }
+  catch { throw { msg: "Ссылка повреждена — возможно, её обрезал мессенджер." }; }
+}
+
+// текст чарта по маршруту: сразу из памяти или недавних, иначе загрузка и повторная отрисовка
+const mem = {}, loading = {};
+function need(info) {
+  const k = info.key;
+  if (mem[k]) return mem[k];
+  if (info.from === "demo") return (mem[k] = { text: DEMO });
+  if (info.from === "file") { const r = recentGet(k); return (mem[k] = r ? { text: r.text } : { err: { msg: "Этого файла нет в недавних на этом устройстве — открой его заново." } }); }
+  if (loading[k]) return null;
+  const cached = info.from === "drive" ? recentGet(k) : null;
+  loading[k] = (info.from === "link" ? unpack(info.data) : driveText(info.id)).then((text) => {
+    const prev = mem[k]; mem[k] = { text };
+    remember(info, text, info.from === "drive" ? driveRoute(text, info.id) : info.route);
+    return !prev || prev.text !== text || prev.waiting;
+  }, (e) => {
+    const err = e && e.msg ? e : { msg: "Не получилось открыть чарт.", detail: String(e) };
+    mem[k] = cached ? { text: cached.text, failed: err, at: cached.at } : { err };
+    return true;
+  }).then((changed) => { delete loading[k]; if (changed) render(); });
+  return cached ? (mem[k] = { text: cached.text, refreshing: true }) : null;
+}
+function openDriveLink(s) {
+  s = (s || "").trim();
+  if (/\/folders\//.test(s)) return toast("Это ссылка на папку — нужна ссылка на сам файл .cho");
+  const m = /\/d\/([\w-]{20,})/.exec(s) || /[?&]id=([\w-]{20,})/.exec(s) || /#(?:[a-z0-9-]*\.)?([\w-]{20,})/.exec(s) || /^([\w-]{20,})$/.exec(s);
+  if (!m) return toast("Не похоже на ссылку Google Диска");
+  go("#" + m[1]);
+}
+function openLocal(text, name) {
+  if (!/\{\s*(title|t|start_of_\w+|so[cvbg])\s*[:}]/.test(text)) return toast(`«${name}» не похож на чарт ChordPro`);
+  const id = Math.random().toString(36).slice(2, 8), info = { key: "f:" + id, from: "file", route: "file/" + id };
+  remember(info, text); mem[info.key] = { text }; go("#" + info.route);
+}
+
+// ---------- ссылка «поделиться» ----------
+const NOTE_DRIVE = "Ссылка ведёт на файл на Google Диске — её можно вставить в «Базу» или в график. Если заменить файл через «Управление версиями», ссылка продолжит работать и откроет новую версию.";
+const noteInline = (n) => `В ссылке зашит сам чарт (${n} знаков) — удобно скинуть черновик на проверку. Правки файла по ней не видны: для графика нужна ссылка на файл на Диске.`;
+async function shareLink(info, text, keyName) {
+  const base = CONFIG.site || location.href.split("#")[0];
+  if (info.from === "drive") return base + "#" + driveRoute(text, info.id) + (keyName ? "?key=" + encodeURIComponent(keyName) : "");
+  if (info.from === "demo") return base + "#demo";
+  return base + "#t/" + await pack(text);
+}
+async function showLink(url, note) {
+  ui.link = { url, note }; ui.sheet = "link"; render();
+  try { await navigator.clipboard.writeText(url); toast("Ссылка скопирована"); } catch {}
+}
+function linkSheet() {
+  const l = ui.link || { url: "", note: "" };
+  return `<div class="sheet" ${ui.sheet === "link" ? "" : "hidden"}><div class="sheet-panel" role="dialog" aria-label="Ссылка">
+    <div class="sheet-h"><span></span><b>Ссылка</b><button class="done" data-close>Готово</button></div>
+    <input class="md-in" id="link-in" readonly value="${esc(l.url)}" aria-label="Ссылка">
+    <div class="tools" style="margin-top:10px"><button class="btn" id="link-copy">Скопировать</button></div>
+    <p class="hint">${l.note}</p></div></div>`;
+}
+
+// ---------- экраны ----------
+const app = document.getElementById("app");
+const keyState = {};
+const ui = { sheet: null, link: null };
+
+function bindSheets() {
+  $$(".sheet").forEach((sh) => sh.onclick = (ev) => { if (ev.target === sh) { ui.sheet = null; render(); } });
+  $$("[data-close]").forEach((b) => b.onclick = () => { ui.sheet = null; render(); });
+  $$("[data-pref]").forEach((b) => b.onclick = () => { S[b.dataset.pref] = b.dataset.v; save(); applyTheme(); render(); });
+  $$("[data-size]").forEach((b) => b.onclick = () => { S.size = Math.max(-2, Math.min(5, S.size + +b.dataset.size)); save(); applyTheme(); render(); });
+  const lc = $("#link-copy"); if (lc) lc.onclick = () => copyText(ui.link.url, $("#link-in"), "Ссылка скопирована");
+}
+const sizeStepper = () => `<div class="stepper"><button data-size="-1" aria-label="Мельче">A−</button><b>${Math.round((1 + S.size * 0.1) * 100)}%</b><button data-size="1" aria-label="Крупнее">A+</button></div>`;
+function prefsSheet() {
+  const seg = (k, opts) => `<div class="segc" role="group">${opts.map(([v, t]) => `<button data-pref="${k}" data-v="${v}" aria-pressed="${S[k] === v}">${t}</button>`).join("")}</div>`;
+  return `<div class="sheet" ${ui.sheet === "prefs" ? "" : "hidden"}><div class="sheet-panel" role="dialog" aria-label="Настройки">
+    <div class="sheet-h"><span></span><b>Настройки</b><button class="done" data-close>Готово</button></div>
+    <div class="grp"><span class="lab">Тема</span>${seg("theme", [["system", "Как в системе"], ["light", "Светлая"], ["dark", "Тёмная"]])}</div>
+    <div class="grp"><span class="lab">Нотация</span>${seg("notation", [["ru", "H и диезы"], ["int", "B и бемоли"]])}</div>
+    <div class="grp"><span class="lab">Размер текста в чарте</span>${sizeStepper()}</div>
+    <p class="hint">Вид чарта, цифры вместо букв и режим «Сцена» — в меню ⋯ на странице песни. Настройки хранятся только на этом устройстве.</p></div></div>`;
+}
+const sideKey = (key) => { const k = parseKey(key); return k ? keyHTML(k) : esc(key || ""); };
+const recentRow = (r) => `<li class="row"><a href="#${esc(r.route)}">${tile(r.title)}<span class="txt"><span class="t">${esc(r.title)}</span><span class="s">${esc([r.artist, FROM[r.from]].filter(Boolean).join(" · "))}</span></span><span class="side">${sideKey(r.songKey)}</span></a></li>`;
+
+function pageHome() {
+  document.title = "Faworship Charts";
+  const rec = recent();
+  app.innerHTML = `<div class="screen"><div class="wrap lhead"><div class="lhead-row"><h1>Чарты</h1><button class="sq" id="prefb" aria-label="Настройки">${I.gear}</button></div></div>
+    <div class="wrap">
+      <form class="dform" id="h-drive"><input id="h-link" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ссылка на .cho с Google Диска" aria-label="Ссылка на файл .cho с Google Диска"><button class="btn" type="submit">Открыть</button></form>
+      <p class="hint">На Диске: файл .cho → «Поделиться» → «Копировать ссылку». Доступ — «Все, у кого есть ссылка».</p>
+      <div class="acts">
+        <button class="act" id="h-file">${I.file}<b>Открыть файл</b><small>.cho с телефона или компьютера</small></button>
+        <a class="act" href="#edit/new">${I.plus}<b>Новый чарт</b><small>собрать в конструкторе</small></a>
+        <a class="act" href="#demo">${I.note}<b>Пример</b><small>как выглядит чарт</small></a>
+      </div>
+      <input type="file" id="h-input" hidden>
+      <div class="h2"><span>Недавние</span>${rec.length ? '<button class="linkb" id="h-clear">Очистить</button>' : ""}</div>
+      <ul class="rows">${rec.map(recentRow).join("") || '<li class="empty">Здесь появятся чарты, которые ты открывал на этом устройстве.</li>'}</ul>
+      <div class="about"><span>Сайт ничего не хранит: чарты открываются с Google Диска по ссылке. Настройки и «Недавние» — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho).</span></div>
+    </div></div>` + prefsSheet();
+  $("#prefb").onclick = () => { ui.sheet = "prefs"; render(); };
+  $("#h-drive").onsubmit = (ev) => { ev.preventDefault(); openDriveLink($("#h-link").value); };
+  $("#h-file").onclick = () => $("#h-input").click();
+  $("#h-input").onchange = async (ev) => { const f = ev.target.files[0]; if (f) openLocal(await f.text(), f.name); };
+  const c = $("#h-clear");
+  if (c) c.onclick = () => {
+    if (!c.dataset.sure) { c.dataset.sure = "1"; c.textContent = "Точно очистить?"; return; }
+    try { localStorage.removeItem(RECENT); } catch {} render();
+  };
+  bindSheets();
+}
+
+function pageWait(info, back = "#") {
+  app.innerHTML = `<header class="cbar"><div class="wrap chartwrap cbar-row"><a class="ib" href="${back}" aria-label="Назад">${I.back}</a><span class="ctitle"><span>Загрузка…</span></span></div></header>
+    <main class="wrap chartwrap"><p class="hint" style="margin-top:24px">${info.from === "drive" ? "Открываю чарт с Google Диска…" : "Открываю чарт…"}</p></main>`;
+}
+function pageErr(info, err) {
+  app.innerHTML = `<header class="cbar"><div class="wrap chartwrap cbar-row"><a class="ib" href="#" aria-label="На главную">${I.back}</a><span class="ctitle"><span>Чарт не открылся</span></span></div></header>
+    <main class="wrap chartwrap"><div class="notice bad"><b>${esc(err.msg)}</b>${err.detail ? `<small>${esc(err.detail)}</small>` : ""}
+      <div class="tools"><button class="btn" id="retry">Попробовать ещё раз</button><a class="btn ghost" href="#">На главную</a></div></div></main>`;
+  $("#retry").onclick = () => { delete mem[info.key]; render(); };
+}
+
+function pageSong(info, q) {
+  const m = need(info);
+  if (!m) return pageWait(info);
+  if (m.err) return pageErr(info, m.err);
+  const song = parseCho(m.text);
+  const title = song.meta.title || song.meta.t || "Без названия";
+  document.title = `${title} — Faworship Charts`;
+  if (info.from === "drive") {
+    const want = driveRoute(m.text, info.id);
+    if (info.route !== want) { const h = want + (q.key ? "?key=" + encodeURIComponent(q.key) : ""); history.replaceState(null, "", "#" + h); lastRoute = h; info.route = want; }
+  }
+  const orig = parseKey(song.meta.key), asked = orig && parseKey(q.key);
+  const ks = keyState[info.key + "|" + (q.key || "")] ||= { pc: asked ? asked.pc : orig ? orig.pc : 0, capo: 0 };
+  const hasKey = !!orig;
+  const home = asked ? asked.pc : hasKey ? orig.pc : 0;
+  const target = hasKey ? { pc: ks.pc, minor: orig.minor } : { pc: 0, minor: false };
+  const shapes = { pc: mod(target.pc - ks.capo), minor: target.minor };
+  const ctx = hasKey ? { shift: mod(ks.pc - orig.pc - ks.capo), key: shapes } : { shift: 0, key: { pc: 0, minor: false } };
+  const printH = `#print/${info.route}${hasKey ? "~key=" + encodeURIComponent(keyPlain(target)) : ""}`;
+
+  const map = S.showMap && song.map.length ? `<div class="map wrap chartwrap" role="navigation" aria-label="Карта песни">${song.map.map((o, k) =>
+    `<button class="bdg t-${o.sec.type}" data-go="o-${k}" title="${esc(o.sec.label)}${o.times > 1 ? " ×" + o.times : ""}">${esc(o.sec.abbr)}${o.times > 1 ? `<sup>${o.times}</sup>` : ""}</button>`).join("")}</div>` : "";
+  const body = song.sections.length ? chartHTML(song, ctx) : '<p class="hint">В файле нет ни одной секции.</p>';
+  const stat = { verified: '<span class="pill ok">Проверен</span>', ai: '<span class="pill warn">Черновик ИИ · не проверен</span>', draft: '<span class="pill">Черновик</span>' }[song.meta.status] || "";
+  const notice = m.failed ? `<div class="notice"><span>Google Диск сейчас недоступен — показана копия от ${when(m.at)}.</span><button class="linkb" id="retry">Обновить</button></div>` : "";
+
+  const keys = hasKey ? Array.from({ length: 12 }, (_, pc) => {
+    const mark = pc === orig.pc || (asked && pc === asked.pc);
+    return `<button data-key="${pc}" aria-pressed="${pc === ks.pc}">${keyHTML({ pc, minor: orig.minor })}${mark ? '<span class="mark"></span>' : ""}</button>`;
+  }).join("") : "";
+  const sel = (k, opts) => `<div class="selw"><select data-sel="${k}" id="sel-${k}">${opts.map(([v, t]) => `<option value="${v}" ${S[k] === v ? "selected" : ""}>${t}</option>`).join("")}</select>${I.chev}</div>`;
+  const sw = (k, t, sub) => `<div class="tgl"><span>${t}${sub ? `<small>${sub}</small>` : ""}</span><button class="sw" role="switch" data-sw="${k}" aria-checked="${S[k]}" aria-label="${t}"></button></div>`;
+
+  app.innerHTML = `<header class="cbar"><div class="wrap chartwrap cbar-row">
+      <a class="ib" href="#" aria-label="На главную">${I.back}</a>
+      <span class="ctitle"><span>${esc(title)}</span></span>
+      <button class="sq" id="keyb" aria-label="Тональность и capo" ${hasKey ? "" : "disabled"}>${hasKey ? keyHTML(target) : "—"}${ks.capo ? `<small>capo ${ks.capo}</small>` : ""}</button>
+      <button class="sq" id="moreb" aria-label="Настройки чарта">${I.dots}</button></div>${map}</header>
+    <main class="wrap chartwrap" id="chartmain">${notice}
+      <div class="info"><span>${esc([song.meta.artist, song.meta.original].filter(Boolean).join(" · "))}</span>
+        <span><b>Тональность:</b> <span class="v">${hasKey ? keyHTML(target) : "—"}</span><b>Темп:</b> <span class="v">${esc(song.meta.tempo || "—")}</span><b>Размер:</b> <span class="v" style="margin:0">${esc(song.meta.time || "4/4")}</span></span></div>
+      ${stat || ks.capo ? `<div class="flag">${stat}${ks.capo ? `<span>Capo ${ks.capo} — формы ${keyHTML(shapes)}</span>` : ""}</div>` : ""}
+      <div class="chart">${body}</div>
+      <footer class="cfoot"><span>${esc(FROM[info.from][0].toUpperCase() + FROM[info.from].slice(1))}${song.meta.source ? " · источник: " + esc(song.meta.source) : ""}</span>
+        <span class="edit-links"><a href="#edit/${info.route}">Редактировать</a><a href="${printH}">PDF</a><button class="linkb" data-share>Ссылка</button></span></footer>
+    </main>
+    <div class="sheet" ${ui.sheet === "key" ? "" : "hidden"}><div class="sheet-panel" role="dialog" aria-label="Тональность и capo">
+      <div class="sheet-h"><span></span><b>Тональность и capo</b><button class="done" data-close>Готово</button></div>
+      <div class="grp"><span class="lab">Тональность</span><div class="keys">${keys}</div>
+        <p class="hint">Точка — тональность чарта${asked && asked.pc !== orig.pc ? " и тональность из ссылки" : ""}. ${hasKey && (ks.pc !== home || ks.capo) ? `<button class="linkb" id="reset">Вернуть ${keyHTML({ pc: home, minor: orig.minor })}</button>` : ""}</p></div>
+      <div class="grp"><span class="lab">Capo</span><div class="stepper"><button data-capo="-1" aria-label="Capo ниже">−</button><b>${ks.capo || "нет"}</b><button data-capo="1" aria-label="Capo выше">+</button></div>
+        <p class="hint">${ks.capo ? `Аккорды показаны формами ${keyHTML(shapes)}, звучит ${keyHTML(target)}.` : "Capo меняет только вид аккордов на этом устройстве."}</p></div>
+    </div></div>
+    <div class="sheet" ${ui.sheet === "more" ? "" : "hidden"}><div class="sheet-panel" role="dialog" aria-label="Настройки чарта">
+      <div class="sheet-h"><span></span><b>Настройки чарта</b><button class="done" data-close>Готово</button></div>
+      <div class="grp"><label for="sel-view">Вид чарта</label>${sel("view", [["cl", "Аккорды и слова"], ["ly", "Слова"], ["co", "Только аккорды"], ["map", "Карта песни"]])}</div>
+      <div class="grp"><label for="sel-ctype">Аккорды</label>${sel("ctype", [["letters", "Буквы (C, Am, F)"], ["numbers", "Цифры (1, 6m, 4)"], ["roman", "Римские (I, vi, IV)"]])}</div>
+      <div class="grp"><label for="sel-notation">Нотация</label>${sel("notation", [["ru", "H и диезы (C♯, H)"], ["int", "B и бемоли (D♭, B)"]])}</div>
+      <div class="grp"><label for="sel-sections">Секции</label>${sel("sections", [["full", "Полностью"], ["condensed", "Сжато"]])}</div>
+      <div class="grp">${sw("showMap", "Карта песни")}${sw("showMD", "MD-пометки")}${sw("stage", "Сцена", "крупно, тёмная тема, экран не гаснет")}</div>
+      <div class="grp"><span class="lab">Размер текста</span>${sizeStepper()}</div>
+      <p class="hint">Настройки сохраняются только на этом устройстве.</p>
+      <div class="tools" style="margin-top:14px"><a class="btn ghost" href="#edit/${info.route}">Редактировать</a><a class="btn ghost" href="${printH}">PDF</a><button class="btn ghost" data-share>${I.link}Ссылка</button></div>
+    </div></div>` + linkSheet();
+
+  $$("[data-go]").forEach((b) => b.onclick = () => {
+    const el = document.getElementById(b.dataset.go); if (!el) return;
+    const off = $(".cbar").offsetHeight + 8;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  });
+  $("#keyb").onclick = () => { ui.sheet = "key"; render(); };
+  $("#moreb").onclick = () => { ui.sheet = "more"; render(); };
+  $$("[data-key]").forEach((b) => b.onclick = () => { ks.pc = +b.dataset.key; render(); });
+  $$("[data-capo]").forEach((b) => b.onclick = () => { ks.capo = Math.max(0, Math.min(9, ks.capo + +b.dataset.capo)); render(); });
+  const r = $("#reset"); if (r) r.onclick = () => { ks.pc = home; ks.capo = 0; render(); };
+  const rt0 = $("#retry"); if (rt0) rt0.onclick = () => { delete mem[info.key]; render(); };
+  $$("[data-sel]").forEach((x) => x.onchange = () => { S[x.dataset.sel] = x.value; save(); render(); });
+  $$("[data-sw]").forEach((b) => b.onclick = () => { const k = b.dataset.sw; S[k] = !S[k]; save(); if (k === "stage") applyTheme(); render(); });
+  $$("[data-share]").forEach((b) => b.onclick = async () => {
+    const keyName = hasKey && ks.pc !== orig.pc ? keyPlain(target) : "";
+    const url = await shareLink(info, m.text, keyName);
+    showLink(url, info.from === "drive" ? NOTE_DRIVE + (keyName ? ` Откроется в тональности ${keyHTML(target)}.` : "") : info.from === "demo" ? "Ссылка на пример." : noteInline(url.length));
+  });
+  bindSheets();
+  hyphens();
+}
+
+
+// дефис в слове, раздвинутом аккордом: «Ja - cob»
+function hyphens() {
+  for (const a of $$(".a.mid")) {
+    const cw = a.firstElementChild.offsetWidth, tw = a.lastElementChild.offsetWidth;
+    a.classList.toggle("hy", cw - tw > 8);
+    if (cw - tw > 8) a.style.setProperty("--hx", `${tw + (cw - tw) / 2}px`);
+  }
+}
+if (document.fonts) document.fonts.ready.then(hyphens);
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(hyphens, 150); });
+
+// ---------- общее: уведомление, сохранение файла ----------
+function toast(msg) {
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+// на claude.ai файлы сохраняются через возможность downloads (там нет .cho — отдаём .cho.txt), на своём сайте — обычной ссылкой
+let dlCap = null;
+const capDownloads = () => (window.claude && window.claude.use ? (dlCap ||= window.claude.use("downloads").catch(() => null)) : Promise.resolve(null));
+capDownloads();
+async function saveText(name, text) {
+  const dl = await capDownloads();
+  if (dl) {
+    try { await dl.save({ filename: name + ".txt", data: text }); toast(`Скачано как «${name}.txt» — убери «.txt» из имени`); }
+    catch (e) { if (!e || e.code !== "declined") toast("Не получилось скачать — нажми «Копировать текст»"); }
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" })); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  toast("Скачано: " + name);
+}
+function copyText(text, ta, msg = "Текст скопирован") {
+  const fallback = () => { if (ta) { ta.focus(); ta.select(); } toast("Текст выделен — скопируй вручную"); };
+  if (!navigator.clipboard) return fallback();
+  navigator.clipboard.writeText(text).then(() => toast(msg), fallback);
+}
+
+// ---------- редактор: конструктор секций + текст ChordPro ----------
+// типы секций: MultiTracks (блог «Updated Song Sections», их PDF и справка) + Instrumental и Coda из шаблона команды + Solo, Build, Ad-lib, Outro
+const CATALOG = [
+  ["Count-In", "grid", "Ci", "отсчёт перед песней"], ["Intro", "grid", "I", "вступление"], ["Verse", "verse", "V", "куплет"],
+  ["Pre-Chorus", "verse", "Pc", "предприпев"], ["Chorus", "chorus", "C", "припев"], ["Post-Chorus", "verse", "Po", "после припева, повтор хука"],
+  ["Refrain", "verse", "Rf", "проигрыш со строкой-повтором"], ["Tag", "verse", "Tg", "короткий повтор строки"], ["Bridge", "bridge", "B", "бридж"],
+  ["Turnaround", "grid", "Ta", "проигрыш между частями, часто как интро"], ["Interlude", "grid", "It", "короткая связка, 1–2 такта"],
+  ["Instrumental", "grid", "In", "инструментальный проигрыш"], ["Solo", "grid", "So", "соло инструмента"], ["Breakdown", "verse", "Bd", "спад, играют не все"],
+  ["Build", "verse", "Bu", "нарастание"], ["Vamp", "grid", "Vp", "повтор до знака ведущего"], ["Rap", "verse", "Rp", "рэп-вставка"],
+  ["Ad-lib", "verse", "Ad", "спонтанное пение"], ["Ending", "grid", "E", "окончание"], ["Outro", "grid", "O", "аутро"], ["Coda", "verse", "Cd", "кода"],
+];
+const ed = { sid: null, orig: "", doc: null, raw: "", mode: "build", tab: "edit", banner: null, focus: null, cat: false };
+const CHORD1 = /^\(?[A-H](#|b)?(maj|min|dim|aug|sus|add|m|M)?\d*(sus\d*|add\d*)?(\/[A-H](#|b)?)?\)?$/;
+const HEAD_KEYS = ["title", "artist", "key", "tempo", "time"], META_KEYS = ["original", "source", "status", "aliases"];
+const keyPlain = (k) => noteName(k.pc, flatKey(k)) + (k.minor ? "m" : "");
+const normL = (s) => s.toLowerCase().replace(/[-\s]/g, "");
+const catOf = (label) => CATALOG.find((c) => normL(label).startsWith(normL(c[0])));
+const numOf = (label) => +((/\s(\d+)$/.exec(label) || [])[1] || 0);
+const docFind = (doc, label) => { const l = label.toLowerCase(); return doc.sections.find((x) => x.label.toLowerCase() === l) || doc.sections.find((x) => x.label.toLowerCase().startsWith(l)); };
+const edCurrentText = () => (ed.mode === "text" ? ed.raw : docText(ed.doc));
+
+function mapEntries(str) {
+  const out = []; let depth = 0, buf = "";
+  for (const ch of (str || "") + ",") {
+    if (ch === "(") depth++; if (ch === ")") depth--;
+    if (ch === "," && !depth) { if (buf.trim()) out.push(buf.trim()); buf = ""; } else buf += ch;
+  }
+  return out.map((e) => { const m = /^(.*?)(?:\s*[x×](\d+))?\s*(?:\((.*)\))?$/.exec(e); return { label: m[1].trim(), times: +(m[2] || 1), note: (m[3] || "").replace(/^MD:\s*/i, "") }; });
+}
+const mapString = (es) => es.map((e) => e.label + (e.times > 1 ? ` x${e.times}` : "") + (e.note ? ` (MD: ${e.note})` : "")).join(", ");
+
+// .cho ⇄ структура: шапка, карта, секции (тип, MD, текст); всё непонятное сохраняется как есть
+function docParse(text) {
+  const doc = { head: {}, meta: {}, map: [], rest: [], sections: [], errors: [] };
+  let cur = null;
+  text.split("\n").forEach((line, i) => {
+    const t = line.trim(), d = /^\{(\w+)(?::\s*(.*))?\}$/.exec(t);
+    if (d && /^(start_of_|so[cvbgt]$)/.test(d[1])) {
+      if (cur) doc.errors.push(`Секция «${cur.label}» не закрыта`);
+      const env = d[1].startsWith("start_of_") ? d[1].slice(9) : { soc: "chorus", sov: "verse", sob: "bridge", sog: "grid", sot: "tab" }[d[1]];
+      const arg = d[2] || "", label = (/label="([^"]*)"/.exec(arg) || [])[1] || arg || env;
+      cur = { env, label, md: [], body: [] }; doc.sections.push(cur); return;
+    }
+    if (d && /^(end_of_|eo[cvbgt]$)/.test(d[1])) { if (!cur) doc.errors.push(`Лишнее {${d[1]}} в строке ${i + 1}`); cur = null; return; }
+    if (cur) { if (d && (d[1] === "comment" || d[1] === "c") && /^MD:/i.test(d[2] || "")) cur.md.push(d[2].replace(/^MD:\s*/i, "")); else cur.body.push(line); return; }
+    if (d && HEAD_KEYS.includes(d[1])) { doc.head[d[1]] = (d[2] || "").trim(); return; }
+    if (d && d[1] === "meta") { const m = /^(\S+)\s*(.*)$/.exec(d[2] || ""); if (m && m[1] === "map") { doc.map = mapEntries(m[2]); return; } if (m && META_KEYS.includes(m[1])) { doc.meta[m[1]] = m[2].trim(); return; } }
+    if (t || doc.rest.length) doc.rest.push(line);
+  });
+  if (cur) doc.errors.push(`Секция «${cur.label}» не закрыта`);
+  for (const s of doc.sections) {
+    while (s.body.length && !s.body[0].trim()) s.body.shift();
+    while (s.body.length && !s.body[s.body.length - 1].trim()) s.body.pop();
+    s.body = s.body.join("\n"); s.md = s.md.join("\n");
+  }
+  while (doc.rest.length && !doc.rest[doc.rest.length - 1].trim()) doc.rest.pop();
+  return doc;
+}
+function docText(doc) {
+  const L = [];
+  for (const k of HEAD_KEYS) if (doc.head[k]) L.push(`{${k}: ${doc.head[k]}}`);
+  for (const k of META_KEYS) if (doc.meta[k]) L.push(`{meta: ${k} ${doc.meta[k]}}`);
+  if (doc.map.length) L.push(`{meta: map ${mapString(doc.map)}}`);
+  if (doc.rest.length) L.push("", ...doc.rest);
+  for (const s of doc.sections) {
+    L.push("", `{start_of_${s.env}: label="${s.label}"}`);
+    for (const n of (s.md || "").split("\n").map((x) => x.trim()).filter(Boolean)) L.push(`{comment: MD: ${n}}`);
+    if (s.body) L.push(s.body);
+    L.push(`{end_of_${s.env}}`);
+  }
+  return L.join("\n") + "\n";
+}
+function skeleton() {
+  return `{title: Новая песня}\n{key: C}\n{tempo: }\n{time: 4/4}\n{meta: status draft}\n{meta: map Intro, Verse 1, Chorus}\n\n` +
+    `{start_of_grid: label="Intro"}\n| C / / / | / / / / |\n{end_of_grid}\n\n{start_of_verse: label="Verse 1"}\n\n{end_of_verse}\n\n{start_of_chorus: label="Chorus"}\n\n{end_of_chorus}\n`;
+}
+function diatonic(k) {
+  const steps = k.minor ? [[0, "m"], [2, "dim"], [3, ""], [5, "m"], [7, "m"], [8, ""], [10, ""], [7, ""]] : [[0, ""], [2, "m"], [4, "m"], [5, ""], [7, ""], [9, "m"], [11, "dim"]];
+  return steps.map(([st, q]) => noteName(k.pc + st, flatKey(k)) + q);
+}
+function edCheck(doc) {
+  const out = doc.errors.map((e) => ["err", e]);
+  if (!doc.head.title) out.push(["err", "Нет названия"]);
+  if (!parseKey(doc.head.key)) out.push(["err", "Нет тональности — без неё не работает транспонирование"]);
+  const seen = {};
+  for (const s of doc.sections) {
+    if (seen[s.label.toLowerCase()]) out.push(["err", `Две секции «${s.label}» — дай второй номер`]);
+    seen[s.label.toLowerCase()] = 1;
+    for (const l of (s.body || "").split("\n")) {
+      for (const m of l.matchAll(/\[([^\]]*)\]/g)) { const c = m[1].trim(); if (c && !c.startsWith("*") && !CHORD1.test(c)) out.push(["err", `${s.label}: непонятный аккорд [${c}]`]); }
+      if (s.env === "grid" && l.trim() && !l.trim().startsWith("#")) for (const tok of l.split("|").join(" ").split(/\s+/).filter(Boolean)) if (!["/", ".", "%"].includes(tok) && !CHORD1.test(tok)) out.push(["err", `${s.label}: в тактах непонятно «${tok}»`]);
+    }
+    if (!(s.body || "").trim()) out.push(["warn", `${s.label}: пустая секция`]);
+  }
+  doc.map.forEach((e) => { if (!docFind(doc, e.label)) out.push(["err", `В карте «${e.label}», а такой секции нет`]); });
+  if (doc.map.length) doc.sections.forEach((x) => { if (!doc.map.some((e) => docFind(doc, e.label) === x)) out.push(["warn", `Секция «${x.label}» не попала в карту`]); });
+  else if (doc.sections.length) out.push(["warn", "Карта пустая — секции покажутся по порядку"]);
+  return out;
+}
+
+const SAVE_HINT = {
+  drive: "Скачай .cho и замени им файл на Диске новой версией: правый клик по файлу → «Информация о файле» → «Управление версиями» → «Загрузить новую версию». Тогда ссылка на песню не изменится. Если удалить файл и загрузить заново, у него будет новая ссылка.",
+  other: "Скачай .cho и положи в папку песни на Google Диске.",
+};
+function edLoad(text) { ed.raw = text; ed.doc = docParse(text); ed.focus = null; renderEdBody(); }
+function pageEdit(info) {
+  if (ed.sid !== info.key && info.from !== "new") {
+    const m = need(info);
+    if (!m || m.refreshing) { if (m) m.waiting = true; return pageWait(info, "#" + info.route); }
+    if (m.err) return pageErr(info, m.err);
+  }
+  if (ed.sid !== info.key) {
+    Object.assign(ed, { sid: info.key, info, orig: info.from === "new" ? skeleton() : mem[info.key].text, mode: "build", tab: "edit", focus: null, cat: false });
+    ed.raw = ed.orig; ed.doc = docParse(ed.orig); ed.hist = [docText(ed.doc)]; ed.pos = 0; ed.typing = 0;
+    let d = null; try { d = JSON.parse(localStorage.getItem("fw-draft:" + info.key) || "null"); } catch {}
+    ed.banner = d && d.text !== ed.orig ? d : null;
+  }
+  const isNew = info.from === "new";
+  document.title = `${isNew ? "Новый чарт" : "Правка · " + (ed.doc.head.title || "песня")} — Faworship Charts`;
+  app.innerHTML = `<header class="cbar"><div class="wrap edwrap cbar-row">
+      <a class="ib" href="${isNew ? "#" : "#" + info.route}" aria-label="Назад">${I.back}</a>
+      <span class="ctitle" style="cursor:default"><span>${isNew ? "Новый чарт" : "Правка · " + esc(ed.doc.head.title || "песня")}</span></span>
+      <button class="sq" id="ed-undo" aria-label="Отменить" title="Отменить (⌘Z)">${I.undo}</button><button class="sq" id="ed-redo" aria-label="Повторить" title="Повторить (⇧⌘Z)">${I.redo}</button><button class="sq" id="ed-save">Скачать</button></div></header>
+    <div class="wrap edwrap"><input type="file" id="ed-file" hidden>
+      ${ed.banner ? `<div class="banner"><span>Есть несохранённый черновик от ${when(ed.banner.at)}.</span><button class="btn" id="ed-restore">Вернуть</button><button class="btn ghost" id="ed-drop">Удалить</button></div>` : ""}
+      <div class="segc ed-tabs" role="group" aria-label="Что показать"><button data-et="edit" aria-pressed="${ed.tab === "edit"}">Правка</button><button data-et="prev" aria-pressed="${ed.tab === "prev"}">Просмотр</button></div>
+      <div class="ed" data-tab="${ed.tab}">
+        <div class="ed-text">
+          <div class="segc" role="group" aria-label="Режим правки"><button data-mode="build" aria-pressed="${ed.mode === "build"}">Конструктор</button><button data-mode="text" aria-pressed="${ed.mode === "text"}">Текст ChordPro</button></div>
+          <div id="ed-body"></div>
+          <div class="fs"><span class="lab2">Проверка</span><ul class="probs" id="ed-probs"></ul></div>
+          <div class="tools" style="margin-top:16px"><button class="btn" id="ed-save2">Скачать .cho</button><button class="btn ghost" id="ed-copy">Копировать текст</button><a class="btn ghost" href="#print/${info.route}~src=edit">PDF</a><button class="btn ghost" id="ed-share">Ссылка на черновик</button><button class="btn ghost" id="ed-open">Открыть файл</button><button class="btn ghost" id="ed-reset">Сбросить правки</button></div>
+          <p class="hint">${SAVE_HINT[info.from === "drive" ? "drive" : "other"]}</p>
+          <p class="hint">Отменить и повторить — кнопки вверху или ⌘Z / ⇧⌘Z. Черновик хранится в этом браузере, пока не сбросишь правки.</p>
+        </div>
+        <div class="ed-prev"><div class="mstrip" id="ed-strip"></div><div class="chart" id="ed-chart"></div></div>
+      </div></div>` + linkSheet();
+
+  $$("[data-et]").forEach((b) => b.onclick = () => { ed.tab = b.dataset.et; $(".ed").dataset.tab = ed.tab; $$("[data-et]").forEach((x) => x.setAttribute("aria-pressed", x === b)); hyphens(); });
+  $$("[data-mode]").forEach((b) => b.onclick = () => {
+    if (b.dataset.mode === ed.mode) return;
+    if (b.dataset.mode === "text") ed.raw = docText(ed.doc); else ed.doc = docParse(ed.raw);
+    ed.mode = b.dataset.mode; ed.focus = null; $$("[data-mode]").forEach((x) => x.setAttribute("aria-pressed", x === b)); renderEdBody();
+  });
+  const fname = () => (ed.doc.head.title || "Без названия").replace(/[\\/:*?"<>|]+/g, " ").trim() + ".cho";
+  $("#ed-save").onclick = $("#ed-save2").onclick = () => saveText(fname(), edCurrentText());
+  $("#ed-copy").onclick = () => copyText(edCurrentText(), $("#ed-raw"));
+  $("#ed-share").onclick = async () => { const url = await shareLink({ from: "link" }, edCurrentText()); showLink(url, noteInline(url.length)); };
+  $("#ed-reset").onclick = () => { edLoad(ed.orig); toast("Правки сброшены"); };
+  $("#ed-open").onclick = () => $("#ed-file").click();
+  $("#ed-undo").onclick = () => edGo(-1); $("#ed-redo").onclick = () => edGo(1);
+  $("#ed-file").onchange = async (ev) => { const f = ev.target.files[0]; if (!f) return; edLoad(await f.text()); toast("Открыт файл " + f.name); };
+  if (ed.banner) {
+    $("#ed-restore").onclick = () => { const t = ed.banner.text; ed.banner = null; ed.raw = t; ed.doc = docParse(t); render(); };
+    $("#ed-drop").onclick = () => { ed.banner = null; try { localStorage.removeItem("fw-draft:" + info.key); } catch {} render(); };
+  }
+  bindSheets();
+  renderEdBody();
+}
+
+function palHTML() {
+  const k = parseKey(ed.doc.head.key) || { pc: 0, minor: false };
+  return `<div class="tools pal">${diatonic(k).map((c) => `<button class="tool" data-ch="${esc(c)}">${rich(c, { shift: 0, key: k })}</button>`).join("")}<button class="tool" data-raw="[]">[ ]</button><button class="tool" data-raw=" | ">|</button><button class="tool" data-raw=" / / /">/ / /</button></div>`;
+}
+function mapRow(e, i) {
+  const t = secType(e.label, "");
+  return `<li class="mrow t-${t.type}" data-mi="${i}"><button class="grip" data-grip aria-label="Перетащить ${esc(e.label)}: стрелки вверх и вниз">⠿</button><span class="bdg sm">${esc(t.abbr)}</span>
+    <span class="mlabel">${esc(e.label)}${docFind(ed.doc, e.label) ? "" : ' <small class="bad">нет такой секции</small>'}</span>
+    <span class="stp"><button data-m="minus" ${e.times <= 1 ? "disabled" : ""} aria-label="Меньше повторов">−</button><b>×${e.times}</b><button data-m="plus" aria-label="Больше повторов">+</button></span>
+    <button class="mnote${e.note ? " on" : ""}" data-m="note" aria-label="Пометка на этот проход">MD</button><button class="mx" data-m="del" aria-label="Убрать из карты">×</button>
+    ${e.note || e.open ? `<input class="md-in" data-m="noteinput" value="${esc(e.note)}" placeholder="MD на этот проход: «только клавиши», «тише»">` : ""}</li>`;
+}
+function cardHTML(x, i) {
+  const c = catOf(x.label), t = secType(x.label, x.env);
+  const opts = CATALOG.map((cc) => `<option value="${cc[0]}" ${c && c[0] === cc[0] ? "selected" : ""}>${cc[0]} — ${cc[3]}</option>`).join("") + (c ? "" : `<option value="" selected>${esc(x.label)}</option>`);
+  return `<div class="scard t-${t.type}" data-si="${i}"><div class="scard-h"><span class="bdg sm">${esc(t.abbr)}</span>
+      <span class="selw"><select data-s="type" aria-label="Тип секции">${opts}</select>${I.chev}</span>
+      <input class="num" data-s="num" type="number" min="0" max="9" inputmode="numeric" value="${numOf(x.label) || ""}" placeholder="№" aria-label="Номер секции">
+      <span class="grow"></span><button class="mx" data-s="del" aria-label="Удалить секцию ${esc(x.label)}">×</button></div>
+    <input class="md-in" data-s="md" value="${esc((x.md || "").replace(/\n/g, " / "))}" placeholder="MD на все проходы: «только клавиши», «бочка на четверти»">
+    <textarea data-s="body" rows="2" spellcheck="false" placeholder="${x.env === "grid" ? "| C / / / | G / / / |" : "Слова с [аккордами]: [C]Хочу своими устам[D]и"}" aria-label="Текст секции ${esc(x.label)}">${esc(x.body)}</textarea></div>`;
+}
+function renderEdBody() {
+  const box = $("#ed-body"); if (!box) return;
+  const doc = ed.doc;
+  const pal = `<div class="pal-bar">${palHTML()}<p class="hint" style="margin:6px 0 0">Тап вставляет аккорд туда, где курсор: в слова — как [Am], в такты — как Am.</p></div>`;
+  if (ed.mode === "text") {
+    box.innerHTML = pal + '<textarea class="rawta" id="ed-raw" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Текст ChordPro"></textarea>';
+    const ta = $("#ed-raw"); ta.value = ed.raw;
+    ta.oninput = () => { ed.raw = ta.value; ed.doc = docParse(ed.raw); schedulePreview(); };
+    ta.onfocus = () => { ed.focus = ta; };
+    bindPal(box); edPreview(); return;
+  }
+  const inp = (k, label, cls = "", ph = "", src = "h") => `<label class="${cls}">${label}<input data-${src}="${k}" value="${esc((src === "h" ? doc.head : doc.meta)[k] || "")}" placeholder="${ph}" autocomplete="off"></label>`;
+  box.innerHTML = `<div class="fs"><span class="lab2">Шапка</span><div class="meta-f">
+      ${inp("title", "Название", "wide")}${inp("artist", "Исполнитель", "", "Faworship")}${inp("original", "Оригинал", "", "Tremble", "meta")}
+      ${inp("key", "Тональность", "", "C, Am, Db")}${inp("tempo", "Темп", "", "140")}${inp("time", "Размер", "", "4/4")}
+      <label>Статус<select data-meta="status">${[["verified", "Проверен"], ["ai", "Черновик ИИ"], ["draft", "Черновик"]].map(([v, t]) => `<option value="${v}" ${(doc.meta.status || "draft") === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      ${inp("source", "Источник", "", "BIXCloud", "meta")}</div></div>
+    <div class="fs"><span class="lab2">Карта песни — перетащи за ⠿, повторы — «−» и «+»</span>
+      <ol class="mlist" id="ed-mlist">${doc.map.map(mapRow).join("") || '<li class="hint">Пусто — добавь секции кнопками ниже.</li>'}</ol>
+      <div class="tools" style="margin-top:8px">${doc.sections.map((x) => `<button class="tool" data-madd="${esc(x.label)}"><span class="bdg sm t-${secType(x.label, x.env).type}">${esc(secType(x.label, x.env).abbr)}</span>+ ${esc(x.label)}</button>`).join("")}</div></div>
+    ${pal}
+    <div class="fs"><span class="lab2">Секции</span><div class="scards">${doc.sections.map(cardHTML).join("")}</div>
+      <button class="btn ghost addsec" id="ed-addsec" aria-expanded="${ed.cat}">+ Добавить секцию</button>
+      <div class="cat" id="ed-cat" ${ed.cat ? "" : "hidden"}>${CATALOG.map((c) => `<button data-cat="${c[0]}"><span class="bdg sm t-${secType(c[0], c[1]).type}">${c[2]}</span><b>${c[0]}</b><small>${c[3]}</small></button>`).join("")}</div></div>
+    ${doc.rest.some((l) => l.trim()) ? `<details class="check"><summary>Справка из файла</summary><pre class="ref">${esc(doc.rest.join("\n"))}</pre></details>` : ""}`;
+  $$("textarea[data-s=body]", box).forEach(grow);
+  bindPal(box); bindBuild(box); edPreview();
+}
+const grow = (ta) => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; };
+function bindPal(box) {
+  const pal = $(".pal", box);
+  pal.onpointerdown = (ev) => { if (ev.target.closest("button")) ev.preventDefault(); }; // не забирать фокус у текста
+  pal.onclick = (ev) => {
+    const b = ev.target.closest("button"); if (!b) return;
+    const ta = ed.focus && document.body.contains(ed.focus) ? ed.focus : null;
+    if (!ta) return toast("Сначала поставь курсор в текст секции");
+    const grid = ta.dataset.s === "body" && ed.doc.sections[+ta.closest("[data-si]").dataset.si].env === "grid";
+    const str = b.dataset.raw ?? (grid ? b.dataset.ch + " " : `[${b.dataset.ch}]`);
+    const at = ta.selectionStart;
+    ta.setRangeText(str, at, ta.selectionEnd, "end");
+    if (str === "[]") ta.selectionStart = ta.selectionEnd = at + 1;
+    ta.focus(); ta.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+}
+function setLabel(i, label) {
+  const doc = ed.doc, sec = doc.sections[i], old = sec.label;
+  if (!label || label === old) return;
+  let lab = label, n = 2;
+  while (doc.sections.some((x, j) => j !== i && x.label.toLowerCase() === lab.toLowerCase())) lab = `${label.replace(/\s\d+$/, "")} ${n++}`;
+  for (const e of doc.map) if (e.label.toLowerCase() === old.toLowerCase()) e.label = lab;
+  sec.label = lab;
+}
+function addSection(name) {
+  const doc = ed.doc, c = catOf(name);
+  const same = doc.sections.filter((x) => catOf(x.label) === c);
+  let lab = name;
+  if (same.length) {
+    same.forEach((x) => { if (!numOf(x.label)) setLabel(doc.sections.indexOf(x), `${name} 1`); });
+    lab = `${name} ${Math.max(...same.map((x) => numOf(x.label))) + 1}`;
+  } else if (name === "Verse") lab = "Verse 1";
+  const k = parseKey(doc.head.key) || { pc: 0, minor: false };
+  doc.sections.push({ env: c[1], label: lab, md: "", body: c[1] === "grid" ? `| ${keyPlain(k)} / / / | / / / / |` : "" });
+  doc.map.push({ label: lab, times: 1, note: "" });
+  ed.cat = false; renderEdBody();
+  const ta = $(`[data-si="${doc.sections.length - 1}"] textarea`); if (ta) { ta.focus(); ta.scrollIntoView({ block: "center" }); }
+}
+function bindBuild(box) {
+  const doc = ed.doc;
+  box.oninput = (ev) => {
+    const el = ev.target, card = el.closest("[data-si]"), row = el.closest("[data-mi]");
+    if (el.dataset.h) { doc.head[el.dataset.h] = el.value.trim(); if (el.dataset.h === "key") { $(".pal", box).outerHTML = palHTML(); bindPal(box); } }
+    else if (el.dataset.meta) doc.meta[el.dataset.meta] = el.value.trim();
+    else if (card && el.dataset.s === "body") { doc.sections[+card.dataset.si].body = el.value; grow(el); }
+    else if (card && el.dataset.s === "md") doc.sections[+card.dataset.si].md = el.value.split(/\s+\/\s+/).map((x) => x.trim()).filter(Boolean).join("\n");
+    else if (row && el.dataset.m === "noteinput") doc.map[+row.dataset.mi].note = el.value.trim();
+    else return;
+    schedulePreview();
+  };
+  box.onchange = (ev) => {
+    const el = ev.target, card = el.closest("[data-si]"); if (!card) return;
+    const i = +card.dataset.si, sec = doc.sections[i];
+    if (el.dataset.s === "type" && el.value) { const c = catOf(el.value); setLabel(i, el.value + (numOf(sec.label) ? " " + numOf(sec.label) : "")); sec.env = c[1]; renderEdBody(); }
+    if (el.dataset.s === "num") { const base = (catOf(sec.label) || [sec.label.replace(/\s\d+$/, "")])[0]; setLabel(i, base + (+el.value ? " " + +el.value : "")); renderEdBody(); }
+  };
+  box.onfocusin = (ev) => { if (ev.target.matches("textarea")) ed.focus = ev.target; };
+  box.onclick = (ev) => {
+    const b = ev.target.closest("button"); if (!b) return;
+    const row = b.closest("[data-mi]"), card = b.closest("[data-si]");
+    if (row && b.dataset.m) {
+      const i = +row.dataset.mi, e = doc.map[i];
+      if (b.dataset.m === "minus") e.times = Math.max(1, e.times - 1);
+      if (b.dataset.m === "plus") e.times = Math.min(9, e.times + 1);
+      if (b.dataset.m === "del") doc.map.splice(i, 1);
+      if (b.dataset.m === "note") { e.open = !e.open || !!e.note; if (!e.open) e.note = ""; }
+      renderEdBody(); return;
+    }
+    if (card && b.dataset.s === "del") {
+      if (b.dataset.sure) { const sec = doc.sections.splice(+card.dataset.si, 1)[0]; doc.map = doc.map.filter((e) => docFind({ sections: [sec] }, e.label) !== sec || docFind(doc, e.label)); renderEdBody(); }
+      else { b.dataset.sure = "1"; b.textContent = "Удалить?"; b.classList.add("sure"); setTimeout(() => { if (b.isConnected) { delete b.dataset.sure; b.textContent = "×"; b.classList.remove("sure"); } }, 3000); }
+      return;
+    }
+    if (b.dataset.madd) { doc.map.push({ label: b.dataset.madd, times: 1, note: "" }); renderEdBody(); return; }
+    if (b.id === "ed-addsec") { ed.cat = !ed.cat; $("#ed-cat").hidden = !ed.cat; b.setAttribute("aria-expanded", ed.cat); return; }
+    if (b.dataset.cat) addSection(b.dataset.cat);
+  };
+  // перетаскивание строк карты: за ⠿ пальцем или мышью, мышью — и за всю строку; стрелки ↑↓ на ⠿
+  box.onpointerdown = (ev) => {
+    const row = ev.target.closest(".mrow"); if (!row) return;
+    if (!ev.target.closest("[data-grip]") && (ev.pointerType !== "mouse" || ev.target.closest("button, input, select, textarea"))) return;
+    ev.preventDefault(); dragMap(row, ev);
+  };
+  box.onkeydown = (ev) => {
+    const grip = ev.target.closest("[data-grip]"); if (!grip || !/^Arrow(Up|Down)$/.test(ev.key)) return;
+    ev.preventDefault();
+    const i = +grip.closest("li").dataset.mi, j = ev.key === "ArrowUp" ? i - 1 : i + 1;
+    if (j < 0 || j >= doc.map.length) return;
+    [doc.map[i], doc.map[j]] = [doc.map[j], doc.map[i]]; renderEdBody(); $(`[data-mi="${j}"] [data-grip]`).focus();
+  };
+}
+// строка едет за пальцем, остальные раздвигаются; порядок меняется только при отпускании (DOM во время движения не трогаем)
+function dragMap(li, ev) {
+  const rows = [...li.parentElement.children].filter((r) => r.classList.contains("mrow"));
+  const from = rows.indexOf(li), y0 = ev.clientY, sy0 = window.scrollY;
+  const tops = rows.map((r) => r.getBoundingClientRect().top + sy0), hs = rows.map((r) => r.offsetHeight);
+  const step = hs[from] + 6;
+  let to = from, lastY = y0, raf = 0;
+  li.classList.add("dragging");
+  rows.forEach((r) => { if (r !== li) r.style.transition = "transform 0.15s"; });
+  const place = () => {
+    const dy = lastY + window.scrollY - (y0 + sy0), center = tops[from] + hs[from] / 2 + dy;
+    li.style.transform = `translateY(${dy}px)`;
+    to = from;
+    rows.forEach((r, i) => { const c = tops[i] + hs[i] / 2; if (i < from && center < c) to = Math.min(to, i); if (i > from && center > c) to = Math.max(to, i); });
+    rows.forEach((r, i) => { if (i !== from) r.style.transform = i >= to && i < from ? `translateY(${step}px)` : i <= to && i > from ? `translateY(${-step}px)` : ""; });
+  };
+  const tick = () => {
+    const edge = 80, v = lastY < edge ? -(edge - lastY) / 5 : lastY > innerHeight - edge ? (lastY - innerHeight + edge) / 5 : 0;
+    if (v) { window.scrollBy(0, v); place(); }
+    raf = requestAnimationFrame(tick);
+  };
+  const move = (e) => { lastY = e.clientY; place(); };
+  const up = () => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+    rows.forEach((r) => { r.style.transform = ""; r.style.transition = ""; });
+    li.classList.remove("dragging");
+    if (to !== from) { const [e] = ed.doc.map.splice(from, 1); ed.doc.map.splice(to, 0, e); }
+    renderEdBody();
+  };
+  window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  raf = requestAnimationFrame(tick);
+}
+// история правок: каждое действие — шаг, набор текста подряд склеивается в один шаг
+function snap(kind) {
+  const t = edCurrentText(), now = Date.now();
+  if (t === ed.hist[ed.pos]) return;
+  if (kind === "type" && ed.typing && now - ed.typing < 1500 && ed.pos === ed.hist.length - 1 && ed.pos > 0) ed.hist[ed.pos] = t;
+  else { ed.hist = ed.hist.slice(0, ed.pos + 1); ed.hist.push(t); if (ed.hist.length > 300) ed.hist.shift(); ed.pos = ed.hist.length - 1; }
+  ed.typing = kind === "type" ? now : 0;
+  updUndo();
+}
+function updUndo() {
+  const u = $("#ed-undo"), r = $("#ed-redo");
+  if (u) u.disabled = ed.pos <= 0;
+  if (r) r.disabled = ed.pos >= ed.hist.length - 1;
+}
+function edGo(d) {
+  const j = ed.pos + d; if (j < 0 || j >= ed.hist.length) return;
+  ed.pos = j; ed.typing = 0;
+  const t = ed.hist[j]; ed.raw = t; ed.doc = docParse(t); ed.focus = null;
+  renderEdBody(); updUndo();
+}
+let edT = null;
+const schedulePreview = () => { clearTimeout(edT); edT = setTimeout(() => edPreview("type"), 160); };
+function edPreview(kind = "struct") {
+  const chart = $("#ed-chart"); if (!chart) return;
+  const text = edCurrentText(), song = parseCho(text, true);
+  const k = parseKey(song.meta.key) || { pc: 0, minor: false }, ctx = { shift: 0, key: k };
+  $("#ed-strip").innerHTML = song.map.map((o) => `<span class="bdg sm t-${o.sec.type}">${esc(o.sec.abbr)}${o.times > 1 ? `<sup>${o.times}</sup>` : ""}</span>`).join("");
+  chart.innerHTML = song.sections.length ? chartHTML(song, ctx) : '<p class="hint">Добавь секцию — здесь появится чарт.</p>';
+  const probs = edCheck(ed.doc);
+  $("#ed-probs").innerHTML = probs.length ? probs.map(([t, m]) => `<li class="${t}">${esc(m)}</li>`).join("") : '<li class="ok">Ошибок нет</li>';
+  try { if (text !== ed.orig && docText(docParse(text)) !== docText(docParse(ed.orig))) localStorage.setItem("fw-draft:" + ed.sid, JSON.stringify({ text, at: Date.now() })); else localStorage.removeItem("fw-draft:" + ed.sid); } catch {}
+  snap(kind);
+  hyphens();
+}
+
+// ---------- PDF: вёрстка листа A4, печать браузера → «Сохранить как PDF» ----------
+const P = { sid: null, key: null, view: "cl", sections: "full", cols: "2", md: true, map: true, ctype: "letters", notation: "ru" };
+const VIEW_RU = { cl: "аккорды и слова", ly: "слова", co: "аккорды", map: "карта" };
+let printName = "";
+window.addEventListener("beforeprint", () => { if (printName) document.title = printName; });
+function pagePrint(info, opts) {
+  const fromEd = opts.includes("src=edit") && ed.sid === info.key && ed.doc;
+  let text = fromEd ? edCurrentText() : null;
+  if (!text) {
+    if (info.from === "new") return go("#edit/new");
+    const m = need(info);
+    if (!m || m.refreshing) { if (m) m.waiting = true; return pageWait(info, "#" + info.route); }
+    if (m.err) return pageErr(info, m.err);
+    text = m.text;
+  }
+  const song = parseCho(text, true);
+  const orig = parseKey(song.meta.key) || { pc: 0, minor: false };
+  if (P.sid !== info.key) Object.assign(P, { sid: info.key, key: orig.pc, view: "cl", sections: "full", cols: "2", md: true, map: true, ctype: S.ctype, notation: S.notation });
+  for (const o of opts) {
+    const [k, v] = o.split("=");
+    if (k === "key") { const kk = parseKey(decodeURIComponent(v)); if (kk) P.key = kk.pc; }
+    else if (k === "md" || k === "map") P[k] = v !== "0";
+    else if (k in P && k !== "sid") P[k] = v;
+  }
+  const key = { pc: P.key, minor: orig.minor }, ctx = { shift: mod(P.key - orig.pc), key };
+  const keep = { view: S.view, sections: S.sections, showMD: S.showMD, ctype: S.ctype, notation: S.notation };
+  Object.assign(S, { view: P.view, sections: P.sections, showMD: P.md, ctype: P.ctype, notation: P.notation });
+  const chart = chartHTML(song, ctx), keyH = keyHTML(key), kp = keyPlain(key);
+  const keys = Array.from({ length: 12 }, (_, pc) => `<option value="${pc}" ${pc === P.key ? "selected" : ""}>${esc(keyPlain({ pc, minor: orig.minor }))}${pc === orig.pc ? " — оригинал" : ""}</option>`).join("");
+  Object.assign(S, keep);
+  const title = song.meta.title || "Без названия";
+  printName = `${title} — ${kp} — ${VIEW_RU[P.view]}`;
+  document.title = printName;
+  const map = P.map ? song.map.map((o) => `<span class="bdg sm t-${o.sec.type}">${esc(o.sec.abbr)}${o.times > 1 ? `<sup>${o.times}</sup>` : ""}</span>`).join("") : "";
+  const status = { verified: "Проверен", ai: "Черновик ИИ — не проверен", draft: "Черновик" }[song.meta.status] || "";
+  const sel = (id, val, opts2) => `<div class="selw"><select id="${id}">${opts2.map(([v, t]) => `<option value="${v}" ${String(val) === v ? "selected" : ""}>${t}</option>`).join("")}</select>${I.chev}</div>`;
+  app.innerHTML = `<header class="cbar"><div class="wrap edwrap cbar-row"><a class="ib" href="${fromEd ? "#edit/" + info.route : "#" + info.route}" aria-label="Назад">${I.back}</a>
+      <span class="ctitle" style="cursor:default"><span>PDF · ${esc(title)}</span></span><button class="sq" id="pv-print">Сохранить PDF</button></div></header>
+    <div class="wrap edwrap pv">
+      <div class="pv-opts">
+        <div class="grp"><label for="pv-view">Вид</label>${sel("pv-view", P.view, Object.entries(VIEW_RU).map(([v, t]) => [v, t[0].toUpperCase() + t.slice(1)]))}</div>
+        <div class="grp"><label for="pv-key">Тональность</label><div class="selw"><select id="pv-key">${keys}</select>${I.chev}</div></div>
+        <div class="grp"><label for="pv-ctype">Аккорды</label>${sel("pv-ctype", P.ctype, [["letters", "Буквы"], ["numbers", "Цифры"], ["roman", "Римские"]])}</div>
+        <div class="grp"><label for="pv-notation">Нотация</label>${sel("pv-notation", P.notation, [["ru", "H и диезы"], ["int", "B и бемоли"]])}</div>
+        <div class="grp"><label for="pv-sections">Секции</label>${sel("pv-sections", P.sections, [["full", "Полностью"], ["condensed", "Сжато"]])}</div>
+        <div class="grp"><label for="pv-cols">Колонки</label>${sel("pv-cols", P.cols, [["2", "Две"], ["1", "Одна"]])}</div>
+      </div>
+      <div class="pv-sw"><div class="tgl"><span>MD-пометки</span><button class="sw" role="switch" data-pv="md" aria-checked="${P.md}" aria-label="MD-пометки"></button></div>
+        <div class="tgl"><span>Карта песни</span><button class="sw" role="switch" data-pv="map" aria-checked="${P.map}" aria-label="Карта песни"></button></div></div>
+      <p class="hint" style="margin:0">«Сохранить PDF» открывает печать: выбери «Сохранить как PDF» или сразу принтер. Имя файла — «${esc(printName)}».${window.claude ? " В превью на claude.ai печать не работает." : ""}</p>
+      <div class="paper-fit" id="pfit"><div class="paper" id="paper">
+        <div class="ph"><div><div class="pt">${esc(title)}</div><div class="pa">${esc([song.meta.artist, song.meta.original].filter(Boolean).join(" · "))}</div></div>
+          <div class="pk"><span><b>Key:</b> ${keyH}</span><span><b>Tempo:</b> ${esc(song.meta.tempo || "—")}</span><span><b>Time:</b> ${esc(song.meta.time || "4/4")}</span></div></div>
+        ${map ? `<div class="pmap">${map}</div>` : ""}
+        <div class="pchart c${P.cols}">${chart}</div>
+        <div class="pfoot"><span>${esc(song.meta.artist || "")}</span><span>${esc(status)}${song.meta.source ? " · " + esc(song.meta.source) : ""}</span></div>
+      </div></div>
+    </div>`;
+  for (const k of ["view", "ctype", "notation", "sections", "cols"]) $("#pv-" + k).onchange = (ev) => { P[k] = ev.target.value; render(); };
+  $("#pv-key").onchange = (ev) => { P.key = +ev.target.value; render(); };
+  $$("[data-pv]").forEach((b) => b.onclick = () => { P[b.dataset.pv] = !P[b.dataset.pv]; render(); });
+  $("#pv-print").onclick = () => window.print();
+  hyphens(); fitPaper();
+}
+function fitPaper() {
+  const fit = $("#pfit"), paper = $("#paper"); if (!fit || !paper) return;
+  const k = Math.min(1, fit.clientWidth / 794);
+  paper.style.transform = `scale(${k})`; fit.style.height = `${paper.offsetHeight * k}px`;
+}
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { hyphens(); fitPaper(); }, 150); });
+
+// ---------- клавиши, перетаскивание файла в окно ----------
+const go = (h) => { if (h) location.hash = h; };
+document.addEventListener("keydown", (ev) => {
+  if (location.hash.startsWith("#edit/") && (ev.metaKey || ev.ctrlKey) && /^[zyяН]$/i.test(ev.key)) {
+    ev.preventDefault(); edGo(ev.key.toLowerCase() === "y" || ev.key.toLowerCase() === "н" || ev.shiftKey ? 1 : -1); return;
+  }
+  if (ev.key === "Escape" && ui.sheet) { ui.sheet = null; render(); return; }
+  if (!$("#chartmain") || ev.target.closest("input, select, textarea")) return;
+  if (ev.key === "PageDown") { ev.preventDefault(); window.scrollBy({ top: innerHeight * 0.8 }); }
+  else if (ev.key === "PageUp") { ev.preventDefault(); window.scrollBy({ top: -innerHeight * 0.8 }); }
+});
+const hasFiles = (ev) => ev.dataTransfer && [...ev.dataTransfer.types].includes("Files");
+document.addEventListener("dragover", (ev) => { if (hasFiles(ev)) ev.preventDefault(); });
+document.addEventListener("drop", async (ev) => {
+  if (!hasFiles(ev)) return;
+  ev.preventDefault();
+  const f = ev.dataTransfer.files[0]; if (!f) return;
+  const text = await f.text();
+  if (location.hash.startsWith("#edit/") && ed.doc) { edLoad(text); toast("Открыт файл " + f.name); } else openLocal(text, f.name);
+});
+
+// ---------- тема, «Сцена» ----------
+const rootEl = document.documentElement;
+const hostTheme = rootEl.getAttribute("data-theme");
+let lock = null;
+async function applyTheme() {
+  const t = S.stage ? "dark" : S.theme;
+  if (t === "system") { if (hostTheme) rootEl.setAttribute("data-theme", hostTheme); else rootEl.removeAttribute("data-theme"); }
+  else rootEl.setAttribute("data-theme", t);
+  rootEl.style.setProperty("--fs", (1 + S.size * 0.1 + (S.stage ? 0.25 : 0)).toFixed(2));
+  if (S.stage && !lock) { try { lock = await navigator.wakeLock?.request("screen"); } catch { lock = null; } }
+  if (!S.stage && lock) { try { await lock.release(); } catch {} lock = null; }
+}
+document.addEventListener("visibilitychange", () => { if (S.stage && document.visibilityState === "visible") { lock = null; applyTheme(); } });
+
+// ---------- маршруты ----------
+let lastRoute = null;
+function render() {
+  const h = location.hash.slice(1);
+  if (h !== lastRoute) ui.sheet = null;
+  const keep = h === lastRoute ? window.scrollY : 0;
+  lastRoute = h;
+  const [path, qs = ""] = h.split("?");
+  const q = {};
+  for (const p of qs.split("&")) { const [k, v = ""] = p.split("="); if (k) try { q[k] = decodeURIComponent(v); } catch {} }
+  let m, info;
+  if ((m = /^edit\/(.+)$/.exec(path)) && (info = srcInfo(m[1]))) pageEdit(info);
+  else if ((m = /^print\/([^~]+)(.*)$/.exec(path)) && (info = srcInfo(m[1]))) pagePrint(info, m[2].split("~").filter(Boolean));
+  else if (path && (info = srcInfo(path))) pageSong(info, q);
+  else pageHome();
+  window.scrollTo({ top: keep, behavior: "instant" });
+}
+window.addEventListener("hashchange", render);
+applyTheme();
+render();
+})();
+</script>
+</body>
+</html>
