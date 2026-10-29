@@ -343,7 +343,7 @@ textarea.md-in { display: block; resize: vertical; font-family: inherit; line-he
 (() => {
 // Настройка сайта: ключ Google Drive API (в консоли Google ограничен адресом сайта и только Drive API) и адрес сайта для ссылок «поделиться»
 // Версия сайта: исправление — +0.0.1, новая возможность — +0.1.0. Поднимать при каждой выкладке, история — docs/05-tools.md
-const VERSION = "1.6.0";
+const VERSION = "1.6.1";
 const CONFIG = { driveKey: "AIzaSyBNtYHwkI9bE6d7V0TnHEMMbKZCoSr49As", site: "https://faworship.github.io/" };
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1109,8 +1109,7 @@ function pageSetEdit(str, q) {
     const { add, bad } = setLines(seDraft);
     if (!add.length && !bad.length) return toast("Вставь ссылки или названия песен");
     seDraft = bad.map((b) => b.line).join("\n");
-    if (bad.length) toast(bad[0].err + (bad.length > 1 ? ` (и ещё ${bad.length - 1})` : ""));
-    else toast(`Добавлено: ${plural(add.length, ["песня", "песни", "песен"])}`);
+    toast([add.length && `Добавлено: ${plural(add.length, ["песня", "песни", "песен"])}`, bad.length && bad[0].err].filter(Boolean).join(". "));
     put([...items, ...add]);
   };
   $$("[data-k]").forEach((s) => s.onchange = () => {
@@ -1127,12 +1126,14 @@ function pageSetEdit(str, q) {
   const f = fid && document.getElementById(fid);
   if (f && (f.tagName === "INPUT" || f.tagName === "TEXTAREA")) { f.focus({ preventScroll: true }); try { f.setSelectionRange(...sel); } catch {} }
 }
-// строки из поля «Добавить»: ссылка → песня с файла, «1. Стою | G | 148» → песня из «Недавних» с тем же названием или песня без чарта
+// строки из поля «Добавить»: ссылка → песня с файла, «1. Стою | G | 148» → песня из «Недавних» с тем же названием или песня без чарта.
+// Ячейку графика Google Таблицы копируют в кавычках; если строки пронумерованы, строки без номера («СБОРНИК: …») остаются в поле
 function setLines(text) {
   const add = [], bad = [];
   const rec = recent().filter((r) => r.from === "drive" || r.from === "url");
-  for (const raw of text.split("\n")) {
-    const line = raw.trim(); if (!line) continue;
+  const lines = text.split("\n").map((l) => l.trim().replace(/^"|"$/g, "").replace(/""/g, '"').trim()).filter(Boolean);
+  const numbered = lines.some((l) => /^\d+\s*[.)]/.test(l));
+  for (const line of lines) {
     if (/^https?:\/\/|^#|^[\w-]{20,}$/.test(line) || /(drive|docs)\.google\.com/.test(line)) {
       const l = parseLink(line), info = l.route && srcInfo(l.route);
       if (l.err) bad.push({ line, err: l.err });
@@ -1141,6 +1142,7 @@ function setLines(text) {
       else bad.push({ line, err: "В сет добавляются ссылки на файлы, а не чарты внутри ссылки" });
       continue;
     }
+    if (numbered && !/^\d+\s*[.)]/.test(line)) { bad.push({ line, err: "Строки без номера остались в поле" }); continue; }
     const parts = line.replace(/^\d+\s*[.)]\s*/, "").replace(/♯/g, "#").replace(/♭/g, "b").split(/\s*(?:\||\t|\s\/\s)\s*/);
     const title = parts[0].trim(); if (!title) continue;
     const k = parts.slice(1).map((p) => p.trim()).find((p) => /^[A-H][#b]?m?$/.test(p));
