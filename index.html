@@ -1258,12 +1258,17 @@ function pagePrint(info, opts) {
   }
   const song = parseCho(text, true);
   const orig = parseKey(song.meta.key) || { pc: 0, minor: false };
-  if (P.sid !== info.key) Object.assign(P, { sid: info.key, key: orig.pc, view: "cl", sections: "full", cols: "2", md: true, map: true, ctype: S.ctype, notation: S.notation });
-  for (const o of opts) {
-    const [k, v] = o.split("=");
-    if (k === "key") { const kk = parseKey(decodeURIComponent(v)); if (kk) P.key = kk.pc; }
-    else if (k === "md" || k === "map") P[k] = v !== "0";
-    else if (k in P && k !== "sid") P[k] = v;
+  if (P.sid !== info.key) Object.assign(P, { sid: info.key, opts: null, key: orig.pc, view: "cl", sections: "full", cols: "2", md: true, map: true, ctype: S.ctype, notation: S.notation });
+  // настройки из адреса (~key=D со страницы песни) — один раз, когда адрес новый: иначе каждая перерисовка
+  // возвращала бы их и выбор в списках (тональность) откатывался
+  if (P.opts !== opts.join("~")) {
+    P.opts = opts.join("~");
+    for (const o of opts) {
+      const [k, v] = o.split("=");
+      if (k === "key") { const kk = parseKey(decodeURIComponent(v)); if (kk) P.key = kk.pc; }
+      else if (k === "md" || k === "map") P[k] = v !== "0";
+      else if (k in P && k !== "sid" && k !== "opts") P[k] = v;
+    }
   }
   const key = { pc: P.key, minor: orig.minor }, ctx = { shift: mod(P.key - orig.pc), key };
   const keep = { view: S.view, sections: S.sections, showMD: S.showMD, ctype: S.ctype, notation: S.notation };
@@ -1527,6 +1532,7 @@ function render() {
   const q = {};
   for (const p of qs.split("&")) { const [k, v = ""] = p.split("="); if (k) try { q[k] = decodeURIComponent(v); } catch {} }
   let m, info;
+  if (!path.startsWith("print/")) P.opts = null; // в PDF снова придут настройки из адреса — например, новая тональность со страницы песни
   if ((m = /^edit\/(.+)$/.exec(path)) && (info = srcInfo(m[1]))) pageEdit(info);
   else if ((m = /^print\/([^~]+)(.*)$/.exec(path)) && (info = srcInfo(m[1]))) pagePrint(info, m[2].split("~").filter(Boolean));
   else if (path && (info = srcInfo(path))) pageSong(info, q);
