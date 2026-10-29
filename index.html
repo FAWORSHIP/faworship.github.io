@@ -6,17 +6,23 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Faworship Charts</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Lato:wght@400;700;900&display=swap">
 <style>
-/* Layout: home screen (open by Drive link or file, recent charts); chart screen with a sticky header bar and the song map, one column on phones, two columns of outlined section boxes on wide screens; editor; A4 print page */
+/* Layout: home screen (open by Drive link or file, recent charts); chart screen with a sticky header bar and the song map, one column on phones, two columns of outlined section boxes on wide screens; editor; A4 PDF page */
+/* Шрифты свои (fonts/): латиница — Lato, кириллица — Carlito, ♭♮♯ — Noto Sans Symbols. Облегчены до нужных знаков и по лицензии OFL
+   переименованы (tools/fonts.py). Те же файлы встраиваются в PDF, поэтому PDF совпадает со страницей. */
+@font-face { font-family: "Faworship Latin"; src: url(fonts/latin-400.ttf) format("truetype"); font-weight: 400; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Faworship Latin"; src: url(fonts/latin-700.ttf) format("truetype"); font-weight: 700; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Faworship Latin"; src: url(fonts/latin-900.ttf) format("truetype"); font-weight: 900; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Faworship Cyrillic"; src: url(fonts/cyrillic-400.ttf) format("truetype"); font-weight: 400; font-display: swap; unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Faworship Cyrillic"; src: url(fonts/cyrillic-700.ttf) format("truetype"); font-weight: 700; font-display: swap; unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Faworship Symbols"; src: url(fonts/symbols-400.ttf) format("truetype"); font-weight: 400; font-display: swap; unicode-range: U+266D-266F; }
+@font-face { font-family: "Faworship Symbols"; src: url(fonts/symbols-700.ttf) format("truetype"); font-weight: 700; font-display: swap; unicode-range: U+266D-266F; }
 :root {
   --bg: #FFFFFF; --bg2: #F2F2F6; --card: #FFFFFF; --ink: #121214; --ink2: #2A2A2E; --muted: #8B8B91; --line: #E4E4E9; --box: #C9CACF;
   --chip: #EEEEF1; --accent: #2F6FEB; --accent-ink: #FFFFFF; --slash: #E2513A; --bar: rgba(255, 255, 255, 0.94); --scrim: rgba(0, 0, 0, 0.32);
   --s-intro: #2B6E73; --s-verse: #4E4794; --s-pre: #977A24; --s-chorus: #964D26; --s-post: #2F634A; --s-turn: #527A29; --s-bridge: #83434E; --s-inter: #813A35; --s-plain: #6B6B73;
   --ok: #23845A; --warn: #B06A00;
-  --font: "Lato", "Carlito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font: "Faworship Latin", "Faworship Cyrillic", "Faworship Symbols", system-ui, -apple-system, "Segoe UI", sans-serif;
   --fs: 1;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -259,22 +265,19 @@ html { background: var(--bg); }
 .pv-sw { display: flex; flex-wrap: wrap; gap: 4px 24px; }
 .pv-sw .tgl { border: 0; gap: 10px; }
 .paper-fit { width: 100%; overflow: hidden; }
-/* листы A4 одного размера на экране и в печати; секции по листам и колонкам раскладывает paginate().
-   Нижние 21 мм листа пустые и при печати отрезаются: Safari печатает со своими полями и ужимает лист по ширине —
-   целый A4 вылезал за страницу на 3 мм, и между листами появлялись пустые страницы */
+/* листы A4: секции по листам и колонкам раскладывает paginate(), «Скачать PDF» перерисовывает эти листы в файл (pdfFile) */
 .pages { width: 210mm; margin-inline: auto; display: grid; gap: 18px; transform-origin: top left; }
 .paper {
   --bg: #FFFFFF; --bg2: #F2F2F6; --ink: #121214; --ink2: #2A2A2E; --muted: #8B8B91; --line: #E4E4E9; --box: #C9CACF; --chip: #EEEEF1; --bar: #FFFFFF; --slash: #E2513A;
   --s-intro: #2B6E73; --s-verse: #4E4794; --s-pre: #977A24; --s-chorus: #964D26; --s-post: #2F634A; --s-turn: #527A29; --s-bridge: #83434E; --s-inter: #813A35; --s-plain: #6B6B73;
   --fs: 0.78; color-scheme: light; background: var(--bg); color: var(--ink);
-  width: 210mm; height: 297mm; padding: 12mm 12mm 30mm; display: flex; flex-direction: column; overflow: hidden;
+  width: 210mm; height: 297mm; padding: 12mm 12mm 9mm; display: flex; flex-direction: column; overflow: hidden;
   box-shadow: 0 4px 30px rgb(0 0 0 / 0.18); border-radius: 3px;
-  -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .pbody { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 26px; align-items: start; margin-top: 6px; font-size: calc(17px * var(--fs)); }
 .pbody.c2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .pcol > .sec:first-child { margin-top: 0; }
-.paper .sec.cont .sl::after { content: " · продолжение"; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.paper .sl .cn { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
 .ph { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
 .pt { font-size: 26px; font-weight: 900; line-height: 1.1; }
 .pa { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
@@ -282,7 +285,7 @@ html { background: var(--bg); }
 .pk b { color: var(--muted); }
 .pk .ch { color: var(--ink2); font-weight: 400; }
 .pmap { display: flex; flex-wrap: wrap; gap: 9px 8px; margin-top: 14px; }
-.paper .sec { position: relative; break-inside: avoid; -webkit-column-break-inside: avoid; page-break-inside: avoid; padding: 2px 14px 13px; margin-top: 14px; display: flow-root; }
+.paper .sec { position: relative; padding: 2px 14px 13px; margin-top: 14px; display: flow-root; }
 .paper .sec::before { content: ""; position: absolute; inset: 15px 0 0; border: 1px solid var(--box); border-radius: 11px; pointer-events: none; }
 .paper .sh { position: relative; z-index: 1; width: fit-content; margin-left: -6px; }
 .paper .sh .bdg, .paper .sh .sl { background: var(--bg); }
@@ -290,18 +293,6 @@ html { background: var(--bg); }
 .paper .sh::after { display: none; }
 .paper .sh .bdg { box-shadow: 0 0 0 5px var(--bg); }
 .pfoot { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; font-size: 10.5px; color: var(--muted); }
-/* поля листа уже внутри .paper: у печати полей нет, и браузер не дописывает дату и адрес страницы */
-@media print {
-  @page { size: A4; margin: 0; }
-  html, body { background: #FFFFFF !important; margin: 0 !important; }
-  body::before { display: none !important; }
-  #app > :not(.pv), .pv > :not(.paper-fit), .toast { display: none !important; }
-  .pv { display: block !important; padding: 0 !important; max-width: none !important; }
-  .paper-fit { height: auto !important; overflow: visible !important; }
-  .pages { display: block; transform: none !important; margin: 0; }
-  .paper { height: 276mm; padding-bottom: 9mm; box-shadow: none; border-radius: 0; break-after: page; page-break-after: always; }
-  .paper:last-child { break-after: auto; page-break-after: auto; }
-}
 @media (prefers-reduced-motion: reduce) { .sw, .sw::after { transition: none; } }
 </style>
 </head>
@@ -868,10 +859,13 @@ async function saveText(name, text) {
     catch (e) { if (!e || e.code !== "declined") toast("Не получилось скачать — нажми «Копировать текст»"); }
     return;
   }
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" })); a.download = name;
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  saveBlob(name, new Blob([text], { type: "text/plain;charset=utf-8" }));
   toast("Скачано: " + name);
+}
+function saveBlob(name, blob) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
 }
 function copyText(text, ta, msg = "Текст скопирован") {
   const fallback = () => { if (ta) { ta.focus(); ta.select(); } toast("Текст выделен — скопируй вручную"); };
@@ -1248,11 +1242,10 @@ function edPreview(kind = "struct") {
   hyphens();
 }
 
-// ---------- PDF: вёрстка листа A4, печать браузера → «Сохранить как PDF» ----------
+// ---------- PDF: листы A4 как на превью, «Скачать PDF» собирает файл прямо в браузере ----------
 const P = { sid: null, key: null, view: "cl", sections: "full", cols: "2", md: true, map: true, ctype: "letters", notation: "ru" };
 const VIEW_RU = { cl: "аккорды и слова", ly: "слова", co: "аккорды", map: "карта" };
-let printName = "";
-window.addEventListener("beforeprint", () => { if (printName) document.title = printName; });
+let pdfName = "";
 function pagePrint(info, opts) {
   const fromEd = opts.includes("src=edit") && ed.sid === info.key && ed.doc;
   let text = fromEd ? edCurrentText() : null;
@@ -1279,13 +1272,13 @@ function pagePrint(info, opts) {
   const keys = Array.from({ length: 12 }, (_, pc) => `<option value="${pc}" ${pc === P.key ? "selected" : ""}>${esc(keyPlain({ pc, minor: orig.minor }))}${pc === orig.pc ? " — оригинал" : ""}</option>`).join("");
   Object.assign(S, keep);
   const title = song.meta.title || "Без названия";
-  printName = `${title} — ${kp} — ${VIEW_RU[P.view]}`;
-  document.title = printName;
+  pdfName = `${title} — ${kp} — ${VIEW_RU[P.view]}`;
+  document.title = pdfName;
   const map = P.map ? song.map.map((o) => `<span class="bdg sm t-${o.sec.type}">${esc(o.sec.abbr)}${o.times > 1 ? `<sup>${o.times}</sup>` : ""}</span>`).join("") : "";
   const status = { verified: "Проверен", ai: "Черновик ИИ — не проверен", draft: "Черновик" }[song.meta.status] || "";
   const sel = (id, val, opts2) => `<div class="selw"><select id="${id}">${opts2.map(([v, t]) => `<option value="${v}" ${String(val) === v ? "selected" : ""}>${t}</option>`).join("")}</select>${I.chev}</div>`;
   app.innerHTML = `<header class="cbar"><div class="wrap edwrap cbar-row"><a class="ib" href="${fromEd ? "#edit/" + info.route : "#" + info.route}" aria-label="Назад">${I.back}</a>
-      <span class="ctitle" style="cursor:default"><span>PDF · ${esc(title)}</span></span><button class="sq" id="pv-print">Сохранить PDF</button></div></header>
+      <span class="ctitle" style="cursor:default"><span>PDF · ${esc(title)}</span></span><button class="sq" id="pv-dl">Скачать PDF</button></div></header>
     <div class="wrap edwrap pv">
       <div class="pv-opts">
         <div class="grp"><label for="pv-view">Вид</label>${sel("pv-view", P.view, Object.entries(VIEW_RU).map(([v, t]) => [v, t[0].toUpperCase() + t.slice(1)]))}</div>
@@ -1297,7 +1290,7 @@ function pagePrint(info, opts) {
       </div>
       <div class="pv-sw"><div class="tgl"><span>MD-пометки</span><button class="sw" role="switch" data-pv="md" aria-checked="${P.md}" aria-label="MD-пометки"></button></div>
         <div class="tgl"><span>Карта песни</span><button class="sw" role="switch" data-pv="map" aria-checked="${P.map}" aria-label="Карта песни"></button></div></div>
-      <p class="hint" style="margin:0">«Сохранить PDF» открывает печать: выбери «Сохранить как PDF» или сразу принтер. Поля — «По умолчанию» или «Нет», масштаб — 100%. Имя файла — «${esc(printName)}».${window.claude ? " В превью на claude.ai печать не работает." : ""}</p>
+      <p class="hint" style="margin:0">«Скачать PDF» сохраняет файл «${esc(pdfName)}.pdf» — листы A4, как ниже.${window.claude ? " В превью на claude.ai PDF не скачивается." : ""}</p>
       <div class="paper-fit" id="pfit"><div class="pages" id="pages"></div></div>
     </div>`;
   const right = [status, song.meta.source].filter(Boolean).map(esc).join(" · ");
@@ -1311,13 +1304,14 @@ function pagePrint(info, opts) {
   for (const k of ["view", "ctype", "notation", "sections", "cols"]) $("#pv-" + k).onchange = (ev) => { P[k] = ev.target.value; render(); };
   $("#pv-key").onchange = (ev) => { P.key = +ev.target.value; render(); };
   $$("[data-pv]").forEach((b) => b.onclick = () => { P[b.dataset.pv] = !P[b.dataset.pv]; render(); });
-  $("#pv-print").onclick = () => window.print();
+  $("#pv-dl").onclick = (ev) => downloadPdf(ev.currentTarget);
   paginate();
-  // раскладка зависит от шрифта: пока Lato грузится, листы посчитаны по запасному — пересчитать
+  // раскладка зависит от шрифта: пока шрифты грузятся, листы посчитаны по запасному — пересчитать
   if (document.fonts && document.fonts.status === "loading") document.fonts.ready.then(() => { if ($("#pages")) paginate(); });
+  if (opts.includes("out=b64")) pdfB64();
 }
-// Листы A4 и колонки раскладываются здесь, а не CSS-колонками: Safari печатает CSS-колонки одной колонкой
-// и режет строки на границе листа. Секция целиком переносится в следующую колонку, а если она выше колонки — делится по строкам.
+// Листы A4 и колонки раскладываются здесь, а не CSS-колонками: так превью и PDF совпадают лист в лист.
+// Секция целиком переносится в следующую колонку, а если она выше колонки — делится по строкам.
 let PV = null;
 function paginate() {
   const box = $("#pages"); if (!box || !PV) return;
@@ -1346,6 +1340,7 @@ function paginate() {
       ln.remove(); next();
       part = document.createElement("section"); part.className = sec.className + " cont";
       part.innerHTML = sec.querySelector(".sh").outerHTML + '<div class="body"></div>';
+      part.querySelector(".sl").insertAdjacentHTML("beforeend", '<span class="cn"> · продолжение</span>');
       col.appendChild(part); rows = part.lastElementChild;
       if (!ln.classList.contains("blank")) rows.appendChild(ln);
     }
@@ -1357,6 +1352,132 @@ function fitPaper() {
   const fit = $("#pfit"), pages = $("#pages"); if (!fit || !pages) return;
   const k = Math.min(1, fit.clientWidth / pages.offsetWidth);
   pages.style.transform = k < 1 ? `scale(${k})` : ""; fit.style.height = `${pages.offsetHeight * k}px`;
+}
+
+// ---------- PDF-файл: листы превью перерисовываются в PDF в браузере, без печати — одинаково в Safari, Chrome и на телефоне ----------
+// Слова ставятся туда, где их нарисовал браузер, рамки и значки — линиями. Шрифты — те же файлы, что у страницы; в PDF попадают только нужные буквы.
+const PDF_JS = ["https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js", "https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"];
+const FACES = { latin: [400, 700, 900], cyrillic: [400, 700], symbols: [400, 700] };
+const PT = 0.75, A4 = [595.28, 841.89]; // 1 px = 0,75 pt
+const ASC = 1974 / 2400; // базовая линия в прямоугольнике слова: доля подъёма Lato — первого шрифта в --font
+const loaded = {};
+const loadOnce = (key, fn) => (loaded[key] ||= fn().catch((e) => { delete loaded[key]; throw e; }));
+const loadJs = (src) => loadOnce(src, () => new Promise((ok, no) => {
+  const s = document.createElement("script"); s.src = src; s.onload = ok;
+  s.onerror = () => no(new Error("Не загрузилась программа для PDF — проверь интернет"));
+  document.head.appendChild(s);
+}));
+const loadFont = (name) => loadOnce(name, () => fetch(`fonts/${name}.ttf`).then((r) => { if (!r.ok) throw new Error(); return r.arrayBuffer(); })
+  .catch(() => { throw new Error("Не загрузились шрифты для PDF — проверь интернет"); }));
+// начертание как у браузера: 600 и жирнее — ближайшее жирное, иначе обычное
+const face = (fam, w) => { const f = FACES[fam]; return fam + "-" + (w >= 600 ? f.find((x) => x >= w) || f[f.length - 1] : f[0]); };
+const rgbOf = (c) => { const m = c.match(/[\d.]+/g); return m && !(m.length > 3 && +m[3] === 0) ? m.slice(0, 3).map((v) => v / 255) : null; };
+const roundRect = (x, y, w, h, r) => {
+  const k = r * 0.4477; // четверть круга кривой Безье
+  return `M${x + r} ${y}H${x + w - r}C${x + w - k} ${y} ${x + w} ${y + k} ${x + w} ${y + r}V${y + h - r}C${x + w} ${y + h - k} ${x + w - k} ${y + h} ${x + w - r} ${y + h}`
+    + `H${x + r}C${x + k} ${y + h} ${x} ${y + h - k} ${x} ${y + h - r}V${y + r}C${x} ${y + k} ${x + k} ${y} ${x + r} ${y}Z`;
+};
+// что нарисовано на листе: заливки, рамки и слова в px от левого верхнего угла листа
+function sheetOps(sheet, famOf) {
+  const o = sheet.getBoundingClientRect(), ops = [], rng = document.createRange();
+  const at = (r) => ({ x: r.left - o.left, y: r.top - o.top, w: r.width, h: r.height });
+  const deco = (cs, b) => { // тень-обводка (значок секции разрывает рамку), фон, рамка; круг — это скругление 50 %
+    const rad = Math.min((parseFloat(cs.borderTopLeftRadius) || 0) * (cs.borderTopLeftRadius.endsWith("%") ? b.w / 100 : 1), b.w / 2, b.h / 2);
+    const sh = /^(rgba?\([^)]*\)) 0px 0px 0px ([\d.]+)px$/.exec(cs.boxShadow), shc = sh && rgbOf(sh[1]);
+    if (shc) { const s = +sh[2]; ops.push({ t: "fill", x: b.x - s, y: b.y - s, w: b.w + 2 * s, h: b.h + 2 * s, r: rad + s, c: shc }); }
+    const bg = rgbOf(cs.backgroundColor); if (bg) ops.push({ t: "fill", ...b, r: rad, c: bg });
+    const bw = parseFloat(cs.borderTopWidth), bc = cs.borderTopStyle !== "none" && bw > 0 && rgbOf(cs.borderTopColor);
+    if (bc) ops.push({ t: "line", ...b, r: rad, c: bc, bw });
+  };
+  const word = (node, i, j, cs, fam, extra) => {
+    rng.setStart(node, i); rng.setEnd(node, j);
+    const r = rng.getClientRects()[0]; if (!r) return;
+    const s = node.data.slice(i, j);
+    ops.push({ t: "text", s: cs.textTransform === "uppercase" ? s.toUpperCase() : s, x: r.left - o.left, y: r.top - o.top + r.height * ASC,
+      size: parseFloat(cs.fontSize), font: face(fam, parseInt(cs.fontWeight) || 400), it: cs.fontStyle !== "normal", c: rgbOf(cs.color), ...extra });
+  };
+  const text = (node) => { // слово режется на куски одного шрифта (латиница / кириллица / ♭♯), при разрядке — на буквы
+    const s = node.data, cs = getComputedStyle(node.parentElement);
+    if (!s.trim() || !rgbOf(cs.color) || cs.visibility !== "visible") return;
+    const spaced = (parseFloat(cs.letterSpacing) || 0) !== 0;
+    for (const m of s.matchAll(/\S+/g)) {
+      for (let i = m.index, end = i + m[0].length; i < end;) {
+        const fam = famOf(s.codePointAt(i)); let j = i;
+        do j += s.codePointAt(j) > 0xffff ? 2 : 1; while (!spaced && j < end && famOf(s.codePointAt(j)) === fam);
+        word(node, i, j, cs, fam);
+        i = j;
+      }
+    }
+  };
+  const walk = (el) => {
+    const cs = getComputedStyle(el); if (cs.display === "none") return;
+    const b = at(el.getBoundingClientRect());
+    if (el !== sheet) deco(cs, b);
+    const pb = getComputedStyle(el, "::before"); // рамка секции
+    if (pb.position === "absolute" && pb.content !== "none") {
+      const t = parseFloat(pb.top) || 0, l = parseFloat(pb.left) || 0;
+      deco(pb, { x: b.x + l, y: b.y + t, w: b.w - l - (parseFloat(pb.right) || 0), h: b.h - t - (parseFloat(pb.bottom) || 0) });
+    }
+    for (const n of el.childNodes) if (n.nodeType === 3) text(n); else if (n.nodeType === 1) walk(n);
+    if (el.matches(".a.hy")) { // дефис между слогами — это ::after, его нет в тексте: на той же строке, по центру --hx
+      const x = el.lastElementChild.firstChild, ca = getComputedStyle(el, "::after");
+      if (x && x.data.trim()) {
+        rng.setStart(x, 0); rng.setEnd(x, x.data.length); const r = rng.getClientRects()[0];
+        if (r) ops.push({ t: "text", s: "-", x: b.x + parseFloat(el.style.getPropertyValue("--hx")), y: r.top - o.top + r.height * ASC, mid: true,
+          size: parseFloat(ca.fontSize), font: face("latin", parseInt(ca.fontWeight) || 400), it: false, c: rgbOf(ca.color) || [0.5, 0.5, 0.5] });
+      }
+    }
+  };
+  walk(sheet);
+  return ops;
+}
+async function pdfFile() {
+  const fams = Object.keys(FACES);
+  const [, , ...regular] = await Promise.all([...PDF_JS.map(loadJs), ...fams.map((f) => loadFont(f + "-400"))]);
+  const { PDFDocument, rgb, degrees } = window.PDFLib;
+  const cover = regular.map((buf) => window.fontkit.create(new Uint8Array(buf)));
+  const famOf = (cp) => fams[cover.findIndex((f) => f.hasGlyphForCodePoint(cp))] || "latin";
+  const pages = $("#pages"); if (!pages) throw new Error("Нет листов для PDF");
+  const tf = pages.style.transform; pages.style.transform = ""; // мерить без уменьшения превью
+  let sheets;
+  try { sheets = [...pages.children].map((p) => sheetOps(p, famOf)); } finally { pages.style.transform = tf; }
+  const pdf = await PDFDocument.create(); pdf.registerFontkit(window.fontkit);
+  const fonts = {};
+  await Promise.all([...new Set(sheets.flat().filter((op) => op.t === "text").map((op) => op.font))]
+    .map(async (n) => { fonts[n] = await pdf.embedFont(await loadFont(n), { subset: true }); }));
+  for (const ops of sheets) {
+    const page = pdf.addPage(A4), H = A4[1];
+    for (const op of ops) {
+      if (op.t === "text") {
+        const f = fonts[op.font], x = op.mid ? op.x - f.widthOfTextAtSize(op.s, op.size) / 2 : op.x;
+        page.drawText(op.s, { x: x * PT, y: H - op.y * PT, size: op.size * PT, font: f, color: rgb(...op.c), ...(op.it && { xSkew: degrees(12) }) });
+      } else {
+        const k = op.t === "line" ? op.bw / 2 : 0; // линия рисуется по середине рамки
+        page.drawSvgPath(roundRect(op.x + k, op.y + k, op.w - 2 * k, op.h - 2 * k, Math.max(0, op.r - k)),
+          { x: 0, y: H, scale: PT, ...(op.t === "line" ? { borderColor: rgb(...op.c), borderWidth: op.bw } : { color: rgb(...op.c) }) });
+      }
+    }
+  }
+  pdf.setTitle(pdfName); pdf.setCreator("faworship.github.io"); pdf.setProducer("Faworship Charts"); pdf.setLanguage("ru");
+  return pdf.save();
+}
+async function downloadPdf(btn) {
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = "Готовлю…";
+  try { saveBlob(pdfName + ".pdf", new Blob([await pdfFile()], { type: "application/pdf" })); toast(`Скачано: ${pdfName}.pdf`); }
+  catch (e) { toast((e && e.message) || "Не получилось сделать PDF"); }
+  finally { btn.disabled = false; btn.textContent = "Скачать PDF"; }
+}
+// для tools/pdf.py (#print/…~out=b64): PDF в base64 — в <pre id="pdf-b64">, headless Chrome отдаёт его через --dump-dom
+async function pdfB64() {
+  const pre = document.createElement("pre"); pre.id = "pdf-b64"; pre.hidden = true;
+  try {
+    if (document.fonts) await document.fonts.ready;
+    const b = await pdfFile(); let s = "";
+    for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
+    pre.textContent = btoa(s);
+  } catch (e) { pre.textContent = "ERR " + ((e && e.message) || e); }
+  document.body.appendChild(pre);
 }
 window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { hyphens(); fitPaper(); }, 150); });
 
