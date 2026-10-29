@@ -1321,7 +1321,8 @@ function pagePrint(info, opts) {
       </div>
       <div class="pv-sw"><div class="tgl"><span>MD-пометки</span><button class="sw" role="switch" data-pv="md" aria-checked="${P.md}" aria-label="MD-пометки"></button></div>
         <div class="tgl"><span>Карта песни</span><button class="sw" role="switch" data-pv="map" aria-checked="${P.map}" aria-label="Карта песни"></button></div></div>
-      <p class="hint" style="margin:0">«Скачать PDF» сохраняет файл «${esc(pdfName)}.pdf» — листы A4, как ниже.${window.claude ? " В превью на claude.ai PDF не скачивается." : ""}</p>
+      <p class="hint" style="margin:0">${phoneShare() ? `«Скачать PDF» открывает меню «Поделиться»: «Сохранить в Файлы», Telegram, AirDrop, печать. Файл — «${esc(pdfName)}.pdf», листы A4, как ниже.`
+        : `«Скачать PDF» сохраняет файл «${esc(pdfName)}.pdf» — листы A4, как ниже.`}${window.claude ? " В превью на claude.ai PDF не скачивается." : ""}</p>
       <div class="paper-fit" id="pfit"><div class="pages" id="pages"></div></div>
     </div>`;
   const right = [status, song.meta.source].filter(Boolean).map(esc).join(" · ");
@@ -1340,6 +1341,7 @@ function pagePrint(info, opts) {
   // раскладка зависит от шрифта: пока шрифты грузятся, листы посчитаны по запасному — пересчитать
   if (document.fonts && document.fonts.status === "loading") document.fonts.ready.then(() => { if ($("#pages")) paginate(); });
   if (opts.includes("out=b64")) pdfB64();
+  else if (!window.claude) setTimeout(preloadPdf, 600);
 }
 // Листы A4 и колонки раскладываются здесь, а не CSS-колонками: так превью и PDF совпадают лист в лист.
 // Секция целиком переносится в следующую колонку, а если она выше колонки — делится по строкам.
@@ -1492,12 +1494,31 @@ async function pdfFile() {
   pdf.setTitle(pdfName); pdf.setCreator("faworship.github.io"); pdf.setProducer("Faworship Charts"); pdf.setLanguage("ru");
   return pdf.save();
 }
+// На телефоне — меню «Поделиться» (на iPhone скачанный PDF открывается вкладкой, и неясно, как его сохранить), на компьютере — скачивание.
+// Меню открывается только сразу после нажатия: программа для PDF и шрифты грузятся заранее, а если сборка всё же затянулась
+// и браузер меню не дал — готовый файл ждёт второго нажатия («Сохранить PDF»).
+const phoneShare = () => matchMedia("(pointer: coarse)").matches && !!navigator.canShare;
+const preloadPdf = () => { if ($("#pages")) [...PDF_JS.map(loadJs), ...Object.entries(FACES).flatMap(([f, ws]) => ws.map((w) => loadFont(`${f}-${w}`)))].forEach((x) => x.catch(() => {})); };
+let pdfReady = null; // { at: адрес с настройками, file }
 async function downloadPdf(btn) {
   if (btn.disabled) return;
+  const at = location.hash;
+  if (pdfReady && pdfReady.at === at && phoneShare()) return sharePdf(pdfReady.file, btn);
   btn.disabled = true; btn.textContent = "Готовлю…";
-  try { saveBlob(pdfName + ".pdf", new Blob([await pdfFile()], { type: "application/pdf" })); toast(`Скачано: ${pdfName}.pdf`); }
-  catch (e) { toast((e && e.message) || "Не получилось сделать PDF"); }
-  finally { btn.disabled = false; btn.textContent = "Скачать PDF"; }
+  try {
+    const file = new File([await pdfFile()], pdfName + ".pdf", { type: "application/pdf" });
+    if (phoneShare() && navigator.canShare({ files: [file] })) { pdfReady = { at, file }; await sharePdf(file, btn); }
+    else { saveBlob(file.name, file); toast(`Скачано: ${file.name}`); }
+  } catch (e) { toast((e && e.message) || "Не получилось сделать PDF"); }
+  finally { btn.disabled = false; if (btn.textContent === "Готовлю…") btn.textContent = "Скачать PDF"; }
+}
+async function sharePdf(file, btn) {
+  try { await navigator.share({ files: [file] }); btn.textContent = "Скачать PDF"; }
+  catch (e) {
+    if (e && e.name === "AbortError") return; // закрыли меню
+    if (e && e.name === "NotAllowedError") { btn.textContent = "Сохранить PDF"; toast("PDF готов — нажми «Сохранить PDF»"); return; }
+    saveBlob(file.name, file); toast(`Скачано: ${file.name}`);
+  }
 }
 // для tools/pdf.py (#print/…~out=b64): PDF в base64 — в <pre id="pdf-b64">, headless Chrome отдаёт его через --dump-dom
 async function pdfB64() {
