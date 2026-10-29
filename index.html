@@ -259,13 +259,20 @@ html { background: var(--bg); }
 .pv-sw { display: flex; flex-wrap: wrap; gap: 4px 24px; }
 .pv-sw .tgl { border: 0; gap: 10px; }
 .paper-fit { width: 100%; overflow: hidden; }
+/* листы A4 одного размера на экране и в печати; секции по листам и колонкам раскладывает paginate() */
+.pages { width: 210mm; margin-inline: auto; display: grid; gap: 18px; transform-origin: top left; }
 .paper {
   --bg: #FFFFFF; --bg2: #F2F2F6; --ink: #121214; --ink2: #2A2A2E; --muted: #8B8B91; --line: #E4E4E9; --box: #C9CACF; --chip: #EEEEF1; --bar: #FFFFFF; --slash: #E2513A;
   --s-intro: #2B6E73; --s-verse: #4E4794; --s-pre: #977A24; --s-chorus: #964D26; --s-post: #2F634A; --s-turn: #527A29; --s-bridge: #83434E; --s-inter: #813A35; --s-plain: #6B6B73;
   --fs: 0.78; color-scheme: light; background: var(--bg); color: var(--ink);
-  width: 794px; padding: 44px 46px 36px; transform-origin: top left; box-shadow: 0 4px 30px rgb(0 0 0 / 0.18); border-radius: 3px;
+  width: 210mm; height: 297mm; padding: 12mm 12mm 9mm; display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 4px 30px rgb(0 0 0 / 0.18); border-radius: 3px;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
+.pbody { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 26px; align-items: start; margin-top: 6px; font-size: calc(17px * var(--fs)); }
+.pbody.c2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.pcol > .sec:first-child { margin-top: 0; }
+.paper .sec.cont .sl::after { content: " · продолжение"; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
 .ph { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
 .pt { font-size: 26px; font-weight: 900; line-height: 1.1; }
 .pa { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
@@ -273,8 +280,6 @@ html { background: var(--bg); }
 .pk b { color: var(--muted); }
 .pk .ch { color: var(--ink2); font-weight: 400; }
 .pmap { display: flex; flex-wrap: wrap; gap: 9px 8px; margin-top: 14px; }
-.pchart { font-size: calc(17px * var(--fs)); margin-top: 6px; }
-.pchart.c2 { columns: 2; column-gap: 26px; }
 .paper .sec { position: relative; break-inside: avoid; -webkit-column-break-inside: avoid; page-break-inside: avoid; padding: 2px 14px 13px; margin-top: 14px; display: flow-root; }
 .paper .sec::before { content: ""; position: absolute; inset: 15px 0 0; border: 1px solid var(--box); border-radius: 11px; pointer-events: none; }
 .paper .sh { position: relative; z-index: 1; width: fit-content; margin-left: -6px; }
@@ -282,15 +287,18 @@ html { background: var(--bg); }
 .paper .sh .sl { padding-right: 8px; }
 .paper .sh::after { display: none; }
 .paper .sh .bdg { box-shadow: 0 0 0 5px var(--bg); }
-.pfoot { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; font-size: 10.5px; color: var(--muted); }
+.pfoot { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; font-size: 10.5px; color: var(--muted); }
+/* поля листа уже внутри .paper: у печати полей нет, и браузер не дописывает дату и адрес страницы */
 @media print {
-  @page { size: A4; margin: 12mm; }
-  html, body { background: #FFFFFF !important; }
+  @page { size: A4; margin: 0; }
+  html, body { background: #FFFFFF !important; margin: 0 !important; }
   body::before { display: none !important; }
   #app > :not(.pv), .pv > :not(.paper-fit), .toast { display: none !important; }
-  .pv { padding: 0 !important; max-width: none !important; }
+  .pv { display: block !important; padding: 0 !important; max-width: none !important; }
   .paper-fit { height: auto !important; overflow: visible !important; }
-  .paper { transform: none !important; width: auto !important; padding: 0 !important; box-shadow: none !important; border-radius: 0; }
+  .pages { display: block; transform: none !important; margin: 0; }
+  .paper { box-shadow: none; border-radius: 0; break-after: page; page-break-after: always; }
+  .paper:last-child { break-after: auto; page-break-after: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .sw, .sw::after { transition: none; } }
 </style>
@@ -1287,25 +1295,66 @@ function pagePrint(info, opts) {
       </div>
       <div class="pv-sw"><div class="tgl"><span>MD-пометки</span><button class="sw" role="switch" data-pv="md" aria-checked="${P.md}" aria-label="MD-пометки"></button></div>
         <div class="tgl"><span>Карта песни</span><button class="sw" role="switch" data-pv="map" aria-checked="${P.map}" aria-label="Карта песни"></button></div></div>
-      <p class="hint" style="margin:0">«Сохранить PDF» открывает печать: выбери «Сохранить как PDF» или сразу принтер. Имя файла — «${esc(printName)}».${window.claude ? " В превью на claude.ai печать не работает." : ""}</p>
-      <div class="paper-fit" id="pfit"><div class="paper" id="paper">
-        <div class="ph"><div><div class="pt">${esc(title)}</div><div class="pa">${esc([song.meta.artist, song.meta.original].filter(Boolean).join(" · "))}</div></div>
-          <div class="pk"><span><b>Key:</b> ${keyH}</span><span><b>Tempo:</b> ${esc(song.meta.tempo || "—")}</span><span><b>Time:</b> ${esc(song.meta.time || "4/4")}</span></div></div>
-        ${map ? `<div class="pmap">${map}</div>` : ""}
-        <div class="pchart c${P.cols}">${chart}</div>
-        <div class="pfoot"><span>${esc(song.meta.artist || "")}</span><span>${esc(status)}${song.meta.source ? " · " + esc(song.meta.source) : ""}</span></div>
-      </div></div>
+      <p class="hint" style="margin:0">«Сохранить PDF» открывает печать: выбери «Сохранить как PDF» или сразу принтер. Поля — «По умолчанию» или «Нет», масштаб — 100%. Имя файла — «${esc(printName)}».${window.claude ? " В превью на claude.ai печать не работает." : ""}</p>
+      <div class="paper-fit" id="pfit"><div class="pages" id="pages"></div></div>
     </div>`;
+  const right = [status, song.meta.source].filter(Boolean).map(esc).join(" · ");
+  PV = {
+    cols: +P.cols, secs: chart,
+    head: `<div class="ph"><div><div class="pt">${esc(title)}</div><div class="pa">${esc([song.meta.artist, song.meta.original].filter(Boolean).join(" · "))}</div></div>
+      <div class="pk"><span><b>Key:</b> ${keyH}</span><span><b>Tempo:</b> ${esc(song.meta.tempo || "—")}</span><span><b>Time:</b> ${esc(song.meta.time || "4/4")}</span></div></div>
+      ${map ? `<div class="pmap">${map}</div>` : ""}`,
+    foot: (i, n) => `<span>${i ? `${esc(title)} · ${esc(kp)}` : esc(song.meta.artist || "")}</span><span>${[right, n > 1 ? `${i + 1} / ${n}` : ""].filter(Boolean).join(" · ")}</span>`,
+  };
   for (const k of ["view", "ctype", "notation", "sections", "cols"]) $("#pv-" + k).onchange = (ev) => { P[k] = ev.target.value; render(); };
   $("#pv-key").onchange = (ev) => { P.key = +ev.target.value; render(); };
   $$("[data-pv]").forEach((b) => b.onclick = () => { P[b.dataset.pv] = !P[b.dataset.pv]; render(); });
   $("#pv-print").onclick = () => window.print();
+  paginate();
+  // раскладка зависит от шрифта: пока Lato грузится, листы посчитаны по запасному — пересчитать
+  if (document.fonts && document.fonts.status === "loading") document.fonts.ready.then(() => { if ($("#pages")) paginate(); });
+}
+// Листы A4 и колонки раскладываются здесь, а не CSS-колонками: Safari печатает CSS-колонки одной колонкой
+// и режет строки на границе листа. Секция целиком переносится в следующую колонку, а если она выше колонки — делится по строкам.
+let PV = null;
+function paginate() {
+  const box = $("#pages"); if (!box || !PV) return;
+  const tmp = document.createElement("div"); tmp.innerHTML = PV.secs;
+  const sheets = []; let body, col, ci;
+  const sheet = () => {
+    const p = document.createElement("div"); p.className = "paper";
+    p.innerHTML = `${sheets.length ? "" : PV.head}<div class="pbody c${PV.cols}">${'<div class="pcol"></div>'.repeat(PV.cols)}</div><div class="pfoot"></div>`;
+    box.appendChild(p); sheets.push(p);
+    body = p.querySelector(".pbody"); col = body.firstElementChild; ci = 0;
+  };
+  const next = () => { if (++ci < PV.cols) col = body.children[ci]; else sheet(); };
+  const fits = () => col.offsetHeight <= body.clientHeight;
+  box.replaceChildren(); sheet();
+  for (const sec of [...tmp.children]) {
+    col.appendChild(sec);
+    if (fits()) continue;
+    if (col.children.length > 1) { next(); col.appendChild(sec); if (fits()) continue; }
+    const lines = [...(sec.querySelector(".body")?.children || [])];
+    if (lines.length < 2) continue;
+    let part = sec, rows = part.querySelector(".body");
+    rows.replaceChildren();
+    for (const ln of lines) {
+      rows.appendChild(ln);
+      if (fits() || rows.children.length === 1) continue;
+      ln.remove(); next();
+      part = document.createElement("section"); part.className = sec.className + " cont";
+      part.innerHTML = sec.querySelector(".sh").outerHTML + '<div class="body"></div>';
+      col.appendChild(part); rows = part.lastElementChild;
+      if (!ln.classList.contains("blank")) rows.appendChild(ln);
+    }
+  }
+  sheets.forEach((p, i) => { p.lastElementChild.innerHTML = PV.foot(i, sheets.length); });
   hyphens(); fitPaper();
 }
 function fitPaper() {
-  const fit = $("#pfit"), paper = $("#paper"); if (!fit || !paper) return;
-  const k = Math.min(1, fit.clientWidth / 794);
-  paper.style.transform = `scale(${k})`; fit.style.height = `${paper.offsetHeight * k}px`;
+  const fit = $("#pfit"), pages = $("#pages"); if (!fit || !pages) return;
+  const k = Math.min(1, fit.clientWidth / pages.offsetWidth);
+  pages.style.transform = k < 1 ? `scale(${k})` : ""; fit.style.height = `${pages.offsetHeight * k}px`;
 }
 window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { hyphens(); fitPaper(); }, 150); });
 
