@@ -241,6 +241,7 @@ pre.ref { white-space: pre-wrap; font-size: 13px; color: var(--muted); margin: 8
 .probs li { padding: 7px 10px; border-radius: 8px; background: var(--chip); }
 .probs .err { color: var(--warn); font-weight: 700; } .probs .warn { color: var(--ink2); } .probs .ok { color: var(--ok); font-weight: 700; }
 .banner { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.upd { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 61; display: flex; align-items: center; gap: 14px; background: var(--ink); color: var(--bg); padding: 8px 8px 8px 16px; border-radius: 12px; font-size: 14px; white-space: nowrap; box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); }
 .toast { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); }
 .edit-links { display: flex; gap: 14px; justify-content: flex-end; margin-top: 6px; font-size: 13px; }
 .edit-links a { color: var(--accent); font-weight: 700; }
@@ -719,7 +720,7 @@ function pageHome() {
       <input type="file" id="h-input" hidden>
       <div class="h2"><span>Недавние</span>${rec.length ? '<button class="linkb" id="h-clear">Очистить</button>' : ""}</div>
       <ul class="rows">${rec.map(recentRow).join("") || '<li class="empty">Здесь появятся чарты, которые ты открывал на этом устройстве.</li>'}</ul>
-      <div class="about"><span>Сайт ничего не хранит: чарты открываются с Google Диска по ссылке. Настройки и «Недавние» — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho).</span></div>
+      <div class="about"><span>Сайт ничего не хранит: чарты открываются с Google Диска по ссылке. Настройки и «Недавние» — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho). Версия ${BUILD}</span></div>
     </div></div>` + prefsSheet();
   $("#prefb").onclick = () => { ui.sheet = "prefs"; render(); };
   $("#h-drive").onsubmit = (ev) => { ev.preventDefault(); openDriveLink($("#h-link").value); };
@@ -1258,17 +1259,15 @@ function pagePrint(info, opts) {
   }
   const song = parseCho(text, true);
   const orig = parseKey(song.meta.key) || { pc: 0, minor: false };
-  if (P.sid !== info.key) Object.assign(P, { sid: info.key, opts: null, key: orig.pc, view: "cl", sections: "full", cols: "2", md: true, map: true, ctype: S.ctype, notation: S.notation });
-  // настройки из адреса (~key=D со страницы песни) — один раз, когда адрес новый: иначе каждая перерисовка
-  // возвращала бы их и выбор в списках (тональность) откатывался
-  if (P.opts !== opts.join("~")) {
-    P.opts = opts.join("~");
-    for (const o of opts) {
-      const [k, v] = o.split("=");
-      if (k === "key") { const kk = parseKey(decodeURIComponent(v)); if (kk) P.key = kk.pc; }
-      else if (k === "md" || k === "map") P[k] = v !== "0";
-      else if (k in P && k !== "sid" && k !== "opts") P[k] = v;
-    }
+  // настройки PDF живут в адресе (#print/…~key=E~view=ly): ссылка со страницы песни приносит тональность, списки здесь меняют адрес.
+  // Чего в адресе нет — берётся из прошлого раза для этой песни
+  const DEF = { view: "cl", sections: "full", cols: "2", md: true, map: true, ctype: S.ctype, notation: S.notation };
+  if (P.sid !== info.key) Object.assign(P, { sid: info.key, key: orig.pc }, DEF);
+  for (const o of opts) {
+    const [k, v] = o.split("=");
+    if (k === "key") { const kk = parseKey(decodeURIComponent(v)); if (kk) P.key = kk.pc; }
+    else if (k === "md" || k === "map") P[k] = v !== "0";
+    else if (k in DEF) P[k] = v;
   }
   const key = { pc: P.key, minor: orig.minor }, ctx = { shift: mod(P.key - orig.pc), key };
   const keep = { view: S.view, sections: S.sections, showMD: S.showMD, ctype: S.ctype, notation: S.notation };
@@ -1279,6 +1278,11 @@ function pagePrint(info, opts) {
   const title = song.meta.title || "Без названия";
   pdfName = `${title} — ${kp} — ${VIEW_RU[P.view]}`;
   document.title = pdfName;
+  const here = `print/${info.route}~key=${encodeURIComponent(kp)}` + Object.keys(DEF).filter((k) => P[k] !== DEF[k])
+    .map((k) => `~${k}=${typeof P[k] === "boolean" ? +P[k] : P[k]}`).join("") + (opts.includes("src=edit") ? "~src=edit" : "");
+  if (lastRoute !== here) { history.replaceState(null, "", "#" + here); lastRoute = here; }
+  // выбор в списке сразу пишется в адрес, перерисовка читает его оттуда; lastRoute — чтобы не сбросилась прокрутка
+  const setPv = (k, v) => { const h = here.split("~").filter((x) => !x.startsWith(k + "=")).join("~") + `~${k}=${v}`; history.replaceState(null, "", "#" + h); lastRoute = h; render(); };
   const map = P.map ? song.map.map((o) => `<span class="bdg sm t-${o.sec.type}">${esc(o.sec.abbr)}${o.times > 1 ? `<sup>${o.times}</sup>` : ""}</span>`).join("") : "";
   const status = { verified: "Проверен", ai: "Черновик ИИ — не проверен", draft: "Черновик" }[song.meta.status] || "";
   const sel = (id, val, opts2) => `<div class="selw"><select id="${id}">${opts2.map(([v, t]) => `<option value="${v}" ${String(val) === v ? "selected" : ""}>${t}</option>`).join("")}</select>${I.chev}</div>`;
@@ -1306,9 +1310,9 @@ function pagePrint(info, opts) {
       ${map ? `<div class="pmap">${map}</div>` : ""}`,
     foot: (i, n) => `<span>${i ? `${esc(title)} · ${esc(kp)}` : esc(song.meta.artist || "")}</span><span>${[right, n > 1 ? `${i + 1} / ${n}` : ""].filter(Boolean).join(" · ")}</span>`,
   };
-  for (const k of ["view", "ctype", "notation", "sections", "cols"]) $("#pv-" + k).onchange = (ev) => { P[k] = ev.target.value; render(); };
-  $("#pv-key").onchange = (ev) => { P.key = +ev.target.value; render(); };
-  $$("[data-pv]").forEach((b) => b.onclick = () => { P[b.dataset.pv] = !P[b.dataset.pv]; render(); });
+  for (const k of ["view", "ctype", "notation", "sections", "cols"]) $("#pv-" + k).onchange = (ev) => setPv(k, ev.target.value);
+  $("#pv-key").onchange = (ev) => setPv("key", encodeURIComponent(keyPlain({ pc: +ev.target.value, minor: orig.minor })));
+  $$("[data-pv]").forEach((b) => b.onclick = () => setPv(b.dataset.pv, P[b.dataset.pv] ? 0 : 1));
   $("#pv-dl").onclick = (ev) => downloadPdf(ev.currentTarget);
   paginate();
   // раскладка зависит от шрифта: пока шрифты грузятся, листы посчитаны по запасному — пересчитать
@@ -1522,6 +1526,31 @@ async function applyTheme() {
 document.addEventListener("visibilitychange", () => { if (S.stage && document.visibilityState === "visible") { lock = null; applyTheme(); } });
 
 // ---------- маршруты ----------
+// ---------- новая версия сайта ----------
+// Сайт — одна страница: открытая вкладка живёт со старым кодом, пока её не перезагрузят, а браузер ещё и держит копию в кэше.
+// Когда вкладка снова на экране (и раз в 10 минут), код страницы сверяется с сайтом; если он другой — плашка «Обновить».
+const codeHash = (doc) => {
+  const s = [...doc.querySelectorAll("style, script:not([src])")].map((e) => e.textContent).join("");
+  let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+  return h.toString(36);
+};
+const BUILD = codeHash(document);
+let updAt = Date.now();
+async function checkUpdate() {
+  if (window.claude || location.protocol === "file:" || Date.now() - updAt < 5 * 60000 || $(".upd")) return;
+  updAt = Date.now();
+  try {
+    const html = await (await fetch(location.pathname, { cache: "no-store" })).text();
+    if (codeHash(new DOMParser().parseFromString(html, "text/html")) === BUILD) return;
+    const bar = document.createElement("div"); bar.className = "upd";
+    bar.innerHTML = '<span>Вышла новая версия сайта</span><button class="btn">Обновить</button>';
+    bar.querySelector("button").onclick = () => location.reload();
+    document.body.appendChild(bar);
+  } catch {}
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdate(); });
+setInterval(checkUpdate, 10 * 60000);
+
 let lastRoute = null;
 function render() {
   const h = location.hash.slice(1);
@@ -1532,7 +1561,6 @@ function render() {
   const q = {};
   for (const p of qs.split("&")) { const [k, v = ""] = p.split("="); if (k) try { q[k] = decodeURIComponent(v); } catch {} }
   let m, info;
-  if (!path.startsWith("print/")) P.opts = null; // в PDF снова придут настройки из адреса — например, новая тональность со страницы песни
   if ((m = /^edit\/(.+)$/.exec(path)) && (info = srcInfo(m[1]))) pageEdit(info);
   else if ((m = /^print\/([^~]+)(.*)$/.exec(path)) && (info = srcInfo(m[1]))) pagePrint(info, m[2].split("~").filter(Boolean));
   else if (path && (info = srcInfo(path))) pageSong(info, q);
