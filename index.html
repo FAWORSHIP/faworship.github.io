@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Faworship Charts</title>
+<title>ChartSet</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: home screen (open by Drive link or file, recent charts); chart screen with a sticky header bar and the song map, one column on phones, two columns of outlined section boxes on wide screens; editor; A4 PDF page */
@@ -18,22 +18,22 @@
 @font-face { font-family: "Faworship Symbols"; src: url(fonts/symbols-400.ttf) format("truetype"); font-weight: 400; font-display: swap; unicode-range: U+266D-266F; }
 @font-face { font-family: "Faworship Symbols"; src: url(fonts/symbols-700.ttf) format("truetype"); font-weight: 700; font-display: swap; unicode-range: U+266D-266F; }
 :root {
-  --bg: #FFFFFF; --bg2: #F2F2F6; --card: #FFFFFF; --ink: #121214; --ink2: #2A2A2E; --muted: #8B8B91; --line: #E4E4E9; --box: #C9CACF;
-  --chip: #EEEEF1; --accent: #2F6FEB; --accent-ink: #FFFFFF; --slash: #E2513A; --bar: rgba(255, 255, 255, 0.94); --scrim: rgba(0, 0, 0, 0.32);
+  --bg: #FFFFFF; --bg2: #F2F2F0; --card: #FFFFFF; --ink: #121214; --ink2: #2A2A2E; --muted: #6B6C71; --line: #E3E3E0; --box: #C9CACF;
+  --chip: #E8E8E5; --accent: #FFB43C; --accent-ink: #1F2023; --accent-text: #8F5300; --slash: #E2513A; --bar: rgba(255, 255, 255, 0.94); --scrim: rgba(0, 0, 0, 0.32);
   --s-intro: #2B6E73; --s-verse: #4E4794; --s-pre: #977A24; --s-chorus: #964D26; --s-post: #2F634A; --s-turn: #527A29; --s-bridge: #83434E; --s-inter: #813A35; --s-plain: #6B6B73;
   --ok: #23845A; --warn: #B06A00;
   --font: "Faworship Latin", "Faworship Cyrillic", "Faworship Symbols", system-ui, -apple-system, "Segoe UI", sans-serif;
   --fs: 1;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #1E1F21; --bg2: #141416; --card: #26272A; --ink: #F3F3F5; --ink2: #E2E2E6; --muted: #9A9AA1; --line: #34353A; --box: #4A4B51;
-  --chip: #303135; --accent: #4D8DFF; --accent-ink: #FFFFFF; --slash: #FF6B52; --bar: rgba(30, 31, 33, 0.94); --scrim: rgba(0, 0, 0, 0.55);
+  --bg: #1F2023; --bg2: #2A2B30; --card: #2A2B30; --ink: #F3F3F5; --ink2: #E2E2E6; --muted: #A9A9AF; --line: #3A3B41; --box: #4A4B51;
+  --chip: #34353B; --accent: #FFB43C; --accent-ink: #1F2023; --accent-text: #FFB43C; --slash: #FF6B52; --bar: rgba(31, 32, 35, 0.94); --scrim: rgba(0, 0, 0, 0.55);
   --s-intro: #52A6AC; --s-verse: #8F87E2; --s-pre: #D3AF4C; --s-chorus: #DB7A42; --s-post: #52A27B; --s-turn: #8BB85A; --s-bridge: #C76F7D; --s-inter: #CA625A; --s-plain: #9A9AA1;
   --ok: #4CC38A; --warn: #F0B640; color-scheme: dark;
 } }
 :root[data-theme="dark"] {
-  --bg: #1E1F21; --bg2: #141416; --card: #26272A; --ink: #F3F3F5; --ink2: #E2E2E6; --muted: #9A9AA1; --line: #34353A; --box: #4A4B51;
-  --chip: #303135; --accent: #4D8DFF; --accent-ink: #FFFFFF; --slash: #FF6B52; --bar: rgba(30, 31, 33, 0.94); --scrim: rgba(0, 0, 0, 0.55);
+  --bg: #1F2023; --bg2: #2A2B30; --card: #2A2B30; --ink: #F3F3F5; --ink2: #E2E2E6; --muted: #A9A9AF; --line: #3A3B41; --box: #4A4B51;
+  --chip: #34353B; --accent: #FFB43C; --accent-ink: #1F2023; --accent-text: #FFB43C; --slash: #FF6B52; --bar: rgba(31, 32, 35, 0.94); --scrim: rgba(0, 0, 0, 0.55);
   --s-intro: #52A6AC; --s-verse: #8F87E2; --s-pre: #D3AF4C; --s-chorus: #DB7A42; --s-post: #52A27B; --s-turn: #8BB85A; --s-bridge: #C76F7D; --s-inter: #CA625A; --s-plain: #9A9AA1;
   --ok: #4CC38A; --warn: #F0B640; color-scheme: dark;
 }
@@ -45,7 +45,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 button, select, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; border-radius: 6px; }
 .wrap { width: 100%; max-width: 46rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 svg { display: block; flex: none; }
 .muted { color: var(--muted); }
@@ -67,11 +67,15 @@ svg { display: block; flex: none; }
 .cbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bar); -webkit-backdrop-filter: saturate(1.6) blur(14px); backdrop-filter: saturate(1.6) blur(14px); border-bottom: 1px solid var(--line); }
 .cbar-row { display: flex; align-items: center; gap: 6px; padding-block: 8px; min-width: 0; }
 .ib { width: 36px; height: 36px; border: 0; background: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--ink); margin-left: -8px; }
-.ctitle { border: 0; background: none; display: flex; align-items: center; gap: 6px; padding: 4px 2px; min-width: 0; flex: 1; font-size: 19px; font-weight: 400; letter-spacing: -0.01em; text-align: left; }
+.ctitle { border: 0; background: none; display: flex; align-items: center; gap: 6px; padding: 4px 2px; min-width: 0; flex: 1; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; text-align: left; }
 .ctitle span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ctitle svg { color: var(--muted); }
-.sq { min-width: 36px; height: 34px; padding: 0 10px; border-radius: 8px; border: 0; background: var(--chip); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 400; }
-.sq .ch { font-weight: 400; }
+.sq { min-width: 36px; height: 34px; padding: 0 10px; border-radius: 8px; border: 0; background: var(--chip); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
+.sq .ch { font-weight: 700; }
+.sq.keyb { border: 1.5px solid var(--accent-text); color: var(--accent-text); background: var(--bg2); font-size: 17px; }
+.sq.keyb .ch { color: inherit; }
+.sq.keyb:disabled { border-color: var(--line); color: var(--muted); }
+.sq.big { width: 50px; height: 50px; border-radius: 12px; }
 .sq small { font-size: 11px; color: var(--muted); margin-left: 4px; }
 .map { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-top: 4px; padding-bottom: 10px; }
 .map::-webkit-scrollbar { display: none; }
@@ -142,9 +146,9 @@ details.check ul { padding-left: 1.2rem; margin: 10px 0; display: grid; gap: 4px
 .sheet-panel { width: min(100%, 30rem); max-height: 100%; overflow-y: auto; background: var(--bg); border-radius: 16px; padding: 0 18px 20px; box-shadow: 0 16px 48px rgb(0 0 0 / 0.28); }
 .sheet-h { position: sticky; top: 0; background: var(--bg); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-block: 16px 10px; z-index: 1; }
 .sheet-h b { font-size: 17px; font-weight: 700; text-align: center; }
-.done { justify-self: end; border: 0; background: none; color: var(--accent); font-weight: 700; font-size: 17px; padding: 4px 0; }
+.done { justify-self: end; border: 0; background: none; color: var(--accent-text); font-weight: 700; font-size: 17px; padding: 4px 0; }
 .grp { margin-top: 18px; }
-.grp > label, .grp > .lab { display: block; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink2); margin-bottom: 8px; }
+.grp > label, .grp > .lab { display: block; font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
 .selw { position: relative; display: flex; align-items: center; }
 .selw select { appearance: none; -webkit-appearance: none; width: 100%; padding: 11px 40px 11px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); font-size: 16px; }
 .selw svg { position: absolute; right: 14px; pointer-events: none; color: var(--muted); }
@@ -164,7 +168,8 @@ details.check ul { padding-left: 1.2rem; margin: 10px 0; display: grid; gap: 4px
 .keys .ch { font-weight: 700; }
 .keys .mark { position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; opacity: 0.55; }
 .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
-.linkb { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 700; }
+.linkb { border: 0; background: none; padding: 0; color: var(--accent-text); font-weight: 700; }
+.linkb.dim { color: var(--muted); font-weight: 400; font-size: 14px; }
 .segc { display: flex; background: var(--chip); border-radius: 9px; padding: 2px; gap: 2px; }
 .segc button { flex: 1; border: 0; background: none; padding: 7px 6px; border-radius: 7px; font-size: 14px; font-weight: 700; color: var(--ink2); }
 .segc button[aria-pressed="true"] { background: var(--card); box-shadow: 0 1px 3px rgb(0 0 0 / 0.15); color: var(--ink); }
@@ -172,25 +177,31 @@ details.check ul { padding-left: 1.2rem; margin: 10px 0; display: grid; gap: 4px
 /* ---------- списки ---------- */
 .screen { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
 .lhead { padding-block: calc(22px + env(safe-area-inset-top, 0px)) 6px; display: grid; gap: 12px; }
-.lhead h1 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.01em; }
+.lhead h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+.lhead .ib { margin: 0 -8px 0 0; color: var(--muted); }
 .search { display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 10px; padding: 0 12px; color: var(--muted); }
 .search input { flex: 1; border: 0; background: none; padding: 10px 0; font-size: 16px; color: var(--ink); outline: none; min-width: 0; }
 .rows { list-style: none; margin: 0; padding: 0; }
-.row a { display: grid; grid-template-columns: 56px 1fr auto; gap: 0 14px; align-items: center; padding-block: 10px; }
-.row .txt { min-width: 0; border-bottom: 1px solid var(--line); align-self: stretch; display: grid; align-content: center; gap: 2px; padding-block: 2px 10px; }
-.row .side { border-bottom: 1px solid var(--line); align-self: stretch; display: grid; align-content: center; justify-items: end; gap: 2px; padding: 2px 0 10px; color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
-.row .side .ch { font-weight: 400; color: var(--muted); }
-.row:last-child .txt, .row:last-child .side { border-bottom-color: transparent; }
-.row .t { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row .s { font-size: 15px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile { width: 56px; height: 56px; border-radius: 5px; background: linear-gradient(135deg, var(--c1), var(--c2)); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 19px; letter-spacing: 0.02em; overflow: hidden; }
-.empty { padding: 24px 0; color: var(--muted); text-align: center; }
+.row a { display: grid; grid-template-columns: minmax(0, 1fr) auto 2.6em; gap: 0 10px; align-items: center; padding-block: 11px; border-bottom: 1px solid var(--line); }
+.row.n a { grid-template-columns: 1.4em minmax(0, 1fr) auto 2.6em; }
+.row:last-child a { border-bottom-color: transparent; }
+.row .num { color: var(--muted); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.row .txt { min-width: 0; display: grid; gap: 1px; }
+.row .t { font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .s { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kc { min-width: 2.3em; padding: 4px 8px; border-radius: 6px; background: var(--chip); text-align: center; font-size: 16px; font-weight: 700; line-height: 1.25; box-sizing: border-box; }
+.kc:empty { background: none; }
+.kc .ch { font-weight: 700; }
+.bpm { text-align: right; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.empty { padding: 14px 0; color: var(--muted); }
 
 .about { margin-top: 28px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
 /* ---------- редактор ---------- */
 .lhead-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .btn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 9px; padding: 8px 14px; font-weight: 700; font-size: 15px; background: var(--accent); color: var(--accent-ink); }
 .btn.ghost { background: var(--chip); color: var(--ink); }
+.btn svg { width: 16px; height: 16px; }
+.btn.big { flex: 1; justify-content: center; height: 50px; border-radius: 12px; font-size: 16px; }
 .edwrap { max-width: 76rem; }
 .ed { display: grid; gap: 20px; padding-block: 12px 48px; }
 .ed-tabs { margin-top: 12px; }
@@ -202,7 +213,7 @@ details.check ul { padding-left: 1.2rem; margin: 10px 0; display: grid; gap: 4px
 }
 .ed-prev .chart { columns: 1; }
 .meta-f { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
-.meta-f label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.meta-f label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; color: var(--muted); }
 .meta-f input, .meta-f select { font-size: 16px; font-weight: 400; text-transform: none; letter-spacing: 0; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); min-width: 0; }
 .meta-f .wide { grid-column: 1 / -1; }
 .tools { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -211,7 +222,7 @@ details.check ul { padding-left: 1.2rem; margin: 10px 0; display: grid; gap: 4px
 .pal .tool { min-width: 48px; justify-content: center; font-size: 15px; }
 .ed .rawta { display: block; width: 100%; min-height: 60vh; margin-top: 12px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; line-height: 1.55; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); resize: vertical; tab-size: 2; }
 .fs { margin-top: 20px; }
-.lab2 { display: block; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink2); margin-bottom: 8px; }
+.lab2 { display: block; font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
 .mstrip { display: flex; flex-wrap: wrap; gap: 10px 8px; padding-top: 4px; }
 .mlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .mrow { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto auto; align-items: center; gap: 8px; padding: 5px 8px 5px 4px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line); }
@@ -230,7 +241,7 @@ details.check ul { padding-left: 1.2rem; margin: 10px 0; display: grid; gap: 4px
 .stp button:disabled { opacity: 0.35; cursor: default; }
 .stp b { min-width: 2.2em; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; }
 .mnote { border: 1px solid var(--line); background: none; border-radius: 7px; font-size: 11px; font-weight: 700; padding: 5px 6px; color: var(--muted); }
-.mnote.on { color: var(--accent); border-color: var(--accent); }
+.mnote.on { color: var(--accent-text); border-color: var(--accent-text); }
 .mx { border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
 .mx.sure { color: var(--warn); font-size: 13px; font-weight: 700; }
 .md-in { width: 100%; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 14px; }
@@ -256,29 +267,39 @@ pre.ref { white-space: pre-wrap; font-size: 13px; color: var(--muted); margin: 8
 .banner { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .upd { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 61; display: flex; align-items: center; gap: 14px; background: var(--ink); color: var(--bg); padding: 8px 8px 8px 16px; border-radius: 12px; font-size: 14px; white-space: nowrap; box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); }
 .toast { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); }
-.edit-links { display: flex; gap: 14px; justify-content: flex-end; margin-top: 6px; font-size: 13px; }
-.edit-links a { color: var(--accent); font-weight: 700; }
+.edit-links { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; margin-top: 10px; }
+.edit-links a, .edit-links button { padding: 8px 12px; border: 0; border-radius: 9px; background: var(--bg2); color: var(--ink); font-size: 14px; font-weight: 700; }
 
 /* ---------- главная ---------- */
 html { background: var(--bg); }
 .dform { display: flex; gap: 8px; }
 .dform input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); font-size: 16px; }
-.acts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 18px; }
-.act { display: grid; grid-template-columns: auto 1fr; gap: 1px 12px; align-items: center; text-align: left; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--ink); }
-.act svg { grid-row: span 2; width: 24px; height: 24px; color: var(--accent); }
-.act b { font-size: 16px; } .act small { font-size: 13px; color: var(--muted); }
-.h2 { display: flex; justify-content: space-between; align-items: baseline; margin: 30px 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink2); }
-.h2 .linkb { text-transform: none; letter-spacing: 0; font-size: 14px; }
+.hacts { margin-top: 10px; }
+.h2 { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 34px 0 10px; }
+.h2 h2 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.005em; }
+.h2-act { display: flex; align-items: center; gap: 14px; }
+.hscroll { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; }
+.hscroll::-webkit-scrollbar { display: none; }
+@media (min-width: 640px) { .hscroll { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; } }
+.setp { flex: none; width: 238px; box-sizing: border-box; scroll-snap-align: start; padding: 14px 14px 13px; border-radius: 14px; background: var(--bg2); display: flex; flex-direction: column; gap: 3px; }
+.setp b { font-size: 17px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.setp small { font-size: 14px; color: var(--muted); }
+.kflow { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.kflow .kc { min-width: 1.9em; padding: 3px 6px; font-size: 13px; background: var(--bg); }
+.frow a { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding-block: 8px; }
+.fic { width: 40px; height: 40px; border-radius: 10px; background: var(--bg2); display: flex; align-items: center; justify-content: center; color: var(--accent-text); }
+.frow .txt { display: grid; gap: 1px; min-width: 0; }
+.frow .t { font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frow .s { font-size: 14px; color: var(--muted); }
+.frow a > svg { color: var(--muted); }
 .notice { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--chip); font-size: 14px; display: grid; gap: 8px; justify-items: start; }
 .notice.bad b { color: var(--warn); }
 .notice small { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
 /* ---------- сеты ---------- */
 .setsum { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
-.row .side small { font-size: 12.5px; }
-.row.cur .t { color: var(--accent); }
+.row.cur .t { color: var(--accent-text); }
 .row.bad .s { color: var(--warn); }
-.sheet .row a { grid-template-columns: 44px 1fr auto; }
-.sheet .tile { width: 44px; height: 44px; font-size: 17px; }
+.dock { position: sticky; bottom: 0; z-index: 5; display: flex; gap: 8px; margin-top: 20px; padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--bg); border-top: 1px solid var(--line); }
 .snav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 26px; }
 .snb { display: grid; gap: 2px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); min-width: 0; }
 .snb small { font-size: 12.5px; color: var(--muted); }
@@ -303,19 +324,15 @@ html { background: var(--bg); }
 .pk-h small { display: block; font-size: 13px; color: var(--muted); }
 .pk-h > svg { color: var(--muted); transition: transform 0.15s; }
 .pk-h[aria-expanded="true"] > svg { transform: rotate(180deg); }
-.pk-ic { width: 40px; height: 40px; border-radius: 5px; display: flex; align-items: center; justify-content: center; background: var(--chip); color: var(--accent); }
-.pick-sec .tile { width: 40px; height: 40px; font-size: 14px; }
+.pk-ic { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--chip); color: var(--accent-text); }
 .pk-body { border-top: 1px solid var(--line); background: var(--bg); }
 .pk-find { padding: 10px 12px 2px; }
 .pk-list { list-style: none; margin: 0; padding: 0 12px; max-height: min(340px, 48vh); overflow-y: auto; overscroll-behavior: contain; }
-.pk-row { width: 100%; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto 28px; gap: 0 12px; align-items: center; padding: 8px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink); text-align: left; }
+.pk-row { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto 2.4em 28px; gap: 0 12px; align-items: center; padding: 8px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink); text-align: left; }
 .pk-list li:last-child .pk-row { border-bottom: 0; }
 .pk-row .txt { display: grid; gap: 1px; min-width: 0; }
 .pk-row .t { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pk-row .s { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pk-row .side { display: grid; justify-items: end; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
-.pk-row .side .ch { font-weight: 400; color: var(--muted); }
-.pk-row .side small { font-size: 12px; }
 .pk-add { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--accent); color: var(--accent-ink); }
 .pk-add svg { width: 16px; height: 16px; }
 .pk-row:disabled { cursor: default; }
@@ -370,7 +387,7 @@ textarea.md-in { display: block; resize: vertical; font-family: inherit; line-he
 (() => {
 // Настройка сайта: ключ Google Drive API (в консоли Google ограничен адресом сайта и только Drive API) и адрес сайта для ссылок «поделиться»
 // Версия сайта: исправление — +0.0.1, новая возможность — +0.1.0. Поднимать при каждой выкладке, история — docs/05-tools.md
-const VERSION = "1.8.0";
+const VERSION = "1.9.0";
 const CONFIG = { driveKey: "AIzaSyBNtYHwkI9bE6d7V0TnHEMMbKZCoSr49As", site: "https://faworship.github.io/" };
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -391,6 +408,8 @@ const I = {
   link: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
   list: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>',
   clock: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  folder: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4.2l2 2.2H19a1.5 1.5 0 0 1 1.5 1.5v9.3A1.5 1.5 0 0 1 19 19.5H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg>',
+  chevR: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>',
   check: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
   gear: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>',
 };
@@ -578,14 +597,6 @@ function chartHTML(song, ctx) {
     secHTML(o.sec, ctx, { id: j ? `o-${k}-${j}` : `o-${k}`, notes: j ? [] : [o.note] })).join("")).join("");
 }
 
-// ---------- плитки ----------
-const PAL = [["#2B6E73", "#5BB0B6"], ["#4E4794", "#8F87E2"], ["#977A24", "#D9B24E"], ["#964D26", "#E0814A"], ["#2F634A", "#5BAF86"], ["#527A29", "#93C062"], ["#83434E", "#CF7684"], ["#813A35", "#D46A61"]];
-function tile(title, cls = "tile", label) {
-  let h = 0; for (const c of title) h = (h * 31 + c.codePointAt(0)) >>> 0;
-  const [c1, c2] = PAL[h % PAL.length];
-  const ini = label ?? title.replace(/[^\p{L}\p{N} ]/gu, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
-  return `<span class="${cls}" style="--c1:${c1};--c2:${c2}" aria-hidden="true">${esc(ini)}</span>`;
-}
 const when = (at) => new Date(at).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 // ---------- откуда чарт: Google Диск, файл по ссылке (GitHub, Dropbox…), файл с устройства, ссылка с чартом внутри, пример ----------
@@ -803,7 +814,7 @@ function setSong(it) {
   const title = song ? song.meta.title || "Без названия" : it.title || (m && m.err ? "Не открылся" : "Загрузка…");
   return { m, song, orig, key, title, state: !it.src ? "none" : song ? "ok" : m && m.err ? "err" : "wait" };
 }
-const setSub = (it, x, artist) => x.state === "ok" ? [artist && x.song.meta.artist, FROM[it.src.from]].filter(Boolean).join(" · ")
+const setSub = (it, x, artist) => x.state === "ok" ? [artist && x.song.meta.artist, FROM[it.src.from]].filter(Boolean).join(", ")
   : x.state === "err" ? x.m.err.msg : x.state === "none" ? "нет чарта" : "открываю…";
 const plural = (n, f) => `${n} ${f[n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2]}`;
 const normT = (s) => String(s).toLowerCase().replace(/ё/g, "е").replace(/\(.*?\)/g, " ").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -864,29 +875,39 @@ function prefsSheet() {
     <p class="hint">Вид чарта, цифры вместо букв и режим «Сцена» — в меню ⋯ на странице песни. Настройки хранятся только на этом устройстве.</p></div></div>`;
 }
 const sideKey = (key) => { const k = parseKey(key); return k ? keyHTML(k) : esc(key || ""); };
-const recentRow = (r) => `<li class="row"><a href="#${esc(r.route)}">${tile(r.title)}<span class="txt"><span class="t">${esc(r.title)}</span><span class="s">${esc([r.artist, FROM[r.from]].filter(Boolean).join(" · "))}</span></span><span class="side">${sideKey(r.songKey)}</span></a></li>`;
+const metaOf = (text, k) => ((new RegExp(`^\\{${k}:\\s*(.*?)\\}\\s*$`, "m").exec(text || "") || [])[1] || "").trim();
+// ячейка песни во всех списках: название (и пометка, если есть), тональность, темп; у песни сета — номер
+const keyChip = (key) => `<span class="kc">${!key ? "" : typeof key === "string" ? sideKey(key) : keyHTML(key)}</span>`;
+function songRow({ href, title, sub, key, bpm, n, cls = "", attrs = "" }) {
+  return `<li class="row${n != null ? " n" : ""}${cls}"><a href="${href}" ${attrs}>${n != null ? `<span class="num">${n}</span>` : ""}<span class="txt"><span class="t">${esc(title)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ""}</span>${keyChip(key)}<span class="bpm">${esc(bpm || "")}</span></a></li>`;
+}
+const recentRow = (r) => songRow({ href: "#" + esc(r.route), title: r.title, key: r.songKey, bpm: metaOf(r.text, "tempo") });
+// тональности сета на главной: из ссылки, а где сет оставил тональность чарта — из копии чарта на этом устройстве
+function cachedKey(src) {
+  const r = recentGet(src.key); if (r) return r.songKey;
+  const c = src.from === "drive" && libCopy(src.id); return c ? metaOf(c.text, "key") : "";
+}
+const setKeys = (str) => setParse(str).map((it) => it.key || (it.src && cachedKey(it.src))).filter(Boolean);
+const setPanel = (r) => { const ks = setKeys(r.str);
+  return `<a class="setp" href="${setHref(r.str, r.name)}"><b>${esc(r.name || "Сет")}</b><small>${plural(r.titles.length, ["песня", "песни", "песен"])}</small>${ks.length ? `<span class="kflow">${ks.map((k) => `<span class="kc">${sideKey(k)}</span>`).join("")}</span>` : ""}</a>`; };
+const libLine = (l) => `<li class="frow"><a href="#lib/${esc(libRoute(l))}"><span class="fic">${I.folder}</span><span class="txt"><span class="t">${esc(l.name)}</span><span class="s">${plural(l.songs.length, ["песня", "песни", "песен"])}</span></span>${I.chevR}</a></li>`;
 
 function pageHome() {
-  document.title = "Faworship Charts";
+  document.title = "ChartSet";
   const rec = recent(), sets = recentSets(), ls = libs();
-  app.innerHTML = `<div class="screen"><div class="wrap lhead"><div class="lhead-row"><h1>Чарты</h1><button class="sq" id="prefb" aria-label="Настройки">${I.gear}</button></div></div>
+  app.innerHTML = `<div class="screen"><div class="wrap lhead"><div class="lhead-row"><h1>ChartSet</h1><button class="ib" id="prefb" aria-label="Настройки">${I.gear}</button></div></div>
     <div class="wrap">
-      <form class="dform" id="h-drive"><input id="h-link" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ссылка на .cho, сет или папку" aria-label="Ссылка на файл .cho, сет или папку с песнями"><button class="btn" type="submit">Открыть</button></form>
-      <p class="hint">Google Диск: файл .cho → «Поделиться» → «Копировать ссылку», доступ — «Все, у кого есть ссылка». Ссылка на папку откроет библиотеку — все .cho из неё. Подходят и ссылки на файлы в GitHub и Dropbox.</p>
-      <div class="acts">
-        <button class="act" id="h-file">${I.file}<b>Открыть файл</b><small>.cho с телефона или компьютера</small></button>
-        <a class="act" href="#setedit">${I.list}<b>Собрать сет</b><small>песни сета одной ссылкой</small></a>
-        <a class="act" href="#edit/new">${I.plus}<b>Новый чарт</b><small>собрать в конструкторе</small></a>
-        <a class="act" href="#demo">${I.note}<b>Пример</b><small>как выглядит чарт</small></a>
-      </div>
+      <form class="dform" id="h-drive"><input id="h-link" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ссылка на .cho, сет или папку" aria-label="Ссылка на файл .cho, сет или папку с песнями"><button class="btn ghost" type="submit">Открыть</button></form>
+      <div class="tools hacts"><button class="tool" id="h-file">Открыть файл</button><a class="tool" href="#edit/new">Новый чарт</a><a class="tool" href="#demo">Пример</a></div>
+      <p class="hint">Файл .cho или папка на Google Диске с доступом «Все, у кого есть ссылка». Подходят и ссылки на файлы в GitHub и Dropbox.</p>
       <input type="file" id="h-input" hidden>
-      ${ls.length ? `<div class="h2"><span>Библиотеки</span><button class="linkb" data-clear="${LIBS}">Очистить</button></div>
-      <ul class="rows">${ls.map((l) => `<li class="row"><a href="#lib/${esc(libRoute(l))}">${tile(l.name)}<span class="txt"><span class="t">${esc(l.name)}</span><span class="s">${plural(l.songs.length, ["песня", "песни", "песен"])}</span></span><span class="side">${l.at ? esc(new Date(l.at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })) : ""}</span></a></li>`).join("")}</ul>` : ""}
-      ${sets.length ? `<div class="h2"><span>Сеты</span><button class="linkb" data-clear="${SETS}">Очистить</button></div>
-      <ul class="rows">${sets.slice(0, 5).map((r) => `<li class="row"><a href="${setHref(r.str, r.name)}">${tile(r.name || "Сет", "tile", String(r.titles.length))}<span class="txt"><span class="t">${esc(r.name || "Сет")}</span><span class="s">${esc(r.titles.filter(Boolean).join(" · ") || plural(r.titles.length, ["песня", "песни", "песен"]))}</span></span><span class="side">${esc(new Date(r.at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" }))}</span></a></li>`).join("")}</ul>` : ""}
-      <div class="h2"><span>Недавние</span>${rec.length ? `<button class="linkb" data-clear="${RECENT}">Очистить</button>` : ""}</div>
-      <ul class="rows">${rec.map(recentRow).join("") || '<li class="empty">Здесь появятся чарты, которые ты открывал на этом устройстве.</li>'}</ul>
-      <div class="about"><span>Сайт ничего не хранит: чарты открываются по ссылке с Google Диска, GitHub или Dropbox, сет — это ссылка со списком песен, библиотека — ссылка на папку. Настройки, «Библиотеки», «Сеты» и «Недавние» — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho). Версия ${VERSION}</span></div>
+      <div class="h2"><h2>Сеты</h2><span class="h2-act">${sets.length ? `<button class="linkb dim" data-clear="${SETS}">Очистить</button>` : ""}<a class="btn" href="#setedit">${I.plus}Собрать сет</a></span></div>
+      ${sets.length ? `<div class="hscroll">${sets.slice(0, 12).map(setPanel).join("")}</div>` : '<p class="hint">Собери песни в сет — получится одна ссылка для графика или чата.</p>'}
+      ${ls.length ? `<div class="h2"><h2>Библиотеки</h2><button class="linkb dim" data-clear="${LIBS}">Очистить</button></div>
+      <ul class="rows">${ls.map(libLine).join("")}</ul>` : ""}
+      <div class="h2"><h2>Недавние песни</h2>${rec.length ? `<button class="linkb dim" data-clear="${RECENT}">Очистить</button>` : ""}</div>
+      <ul class="rows">${rec.map(recentRow).join("") || '<li class="empty">Здесь появятся песни, которые ты открывал на этом устройстве.</li>'}</ul>
+      <div class="about"><span>Сайт ничего не хранит: чарты открываются по ссылке с Google Диска, GitHub или Dropbox, сет — это ссылка со списком песен, библиотека — ссылка на папку. Настройки, библиотеки, сеты и недавние песни — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho). Версия ${VERSION}</span></div>
     </div></div>` + prefsSheet();
   $("#prefb").onclick = () => { ui.sheet = "prefs"; render(); };
   $("#h-drive").onsubmit = (ev) => { ev.preventDefault(); openLink($("#h-link").value); };
@@ -918,7 +939,7 @@ function pageSong(info, q, set) {
   if (m.err) return pageErr(info, m.err);
   const song = parseCho(m.text);
   const title = song.meta.title || song.meta.t || "Без названия";
-  document.title = `${title} — ${set ? set.name || "Сет" : "Faworship Charts"}`;
+  document.title = `${title} — ${set ? set.name || "Сет" : "ChartSet"}`;
   if (info.from === "drive" && !set) {
     const want = driveRoute(m.text, info.id);
     if (info.route !== want) { const h = want + (q.key ? "?key=" + encodeURIComponent(q.key) : ""); history.replaceState(null, "", "#" + h); lastRoute = h; info.route = want; }
@@ -945,7 +966,7 @@ function pageSong(info, q, set) {
   const sel = (k, opts) => `<div class="selw"><select data-sel="${k}" id="sel-${k}">${opts.map(([v, t]) => `<option value="${v}" ${S[k] === v ? "selected" : ""}>${t}</option>`).join("")}</select>${I.chev}</div>`;
   const sw = (k, t, sub) => `<div class="tgl"><span>${t}${sub ? `<small>${sub}</small>` : ""}</span><button class="sw" role="switch" data-sw="${k}" aria-checked="${S[k]}" aria-label="${t}"></button></div>`;
 
-  const right = `<button class="sq" id="keyb" aria-label="Тональность и capo" ${hasKey ? "" : "disabled"}>${hasKey ? keyHTML(target) : "—"}${ks.capo ? `<small>capo ${ks.capo}</small>` : ""}</button>
+  const right = `<button class="sq keyb" id="keyb" aria-label="Тональность и capo" ${hasKey ? "" : "disabled"}>${hasKey ? keyHTML(target) : "—"}${ks.capo ? `<small>capo ${ks.capo}</small>` : ""}</button>
       <button class="sq" id="moreb" aria-label="Настройки чарта">${I.dots}</button>`;
   app.innerHTML = (set ? setBar(set, title, right) : `<header class="cbar"><div class="wrap chartwrap cbar-row">
       <a class="ib" href="${esc(back)}" aria-label="${back === "#" ? "На главную" : "В библиотеку"}">${I.back}</a>
@@ -958,7 +979,7 @@ function pageSong(info, q, set) {
       <div class="chart">${body}</div>
       ${set ? setNav(set) : ""}
       <footer class="cfoot"><span>${esc(FROM[info.from][0].toUpperCase() + FROM[info.from].slice(1))}${song.meta.source ? " · источник: " + esc(song.meta.source) : ""}</span>
-        <span class="edit-links"><a href="#edit/${info.route}">Редактировать</a><a href="${printH}">PDF</a><button class="linkb" data-share>Ссылка</button></span></footer>
+        <span class="edit-links"><a href="#edit/${info.route}">Редактировать</a><a href="${printH}">PDF</a><button data-share>Ссылка</button></span></footer>
     </main>
     <div class="sheet" ${ui.sheet === "key" ? "" : "hidden"}><div class="sheet-panel" role="dialog" aria-label="Тональность и capo">
       <div class="sheet-h"><span></span><b>Тональность и capo</b><button class="done" data-close>Готово</button></div>
@@ -1025,14 +1046,12 @@ const setHref = (str, name, i) => `#set/${str}${i != null ? "/" + (i + 1) : ""}$
 const SET_NOTE = "В ссылке только адреса файлов и тональности, сами песни сайт не хранит: правки чартов будут видны по той же ссылке. Поменять состав — «Изменить», получится новая ссылка.";
 function setRow(it, i, str, name, cur) {
   const x = setSong(it);
-  const sub = setSub(it, x, true);
-  const tempo = x.song && x.song.meta.tempo;
-  return `<li class="row${cur ? " cur" : ""}${x.state === "err" ? " bad" : ""}"><a href="${setHref(str, name, i)}" data-seti="${i}">${tile(x.title, "tile", String(i + 1))}<span class="txt"><span class="t">${esc(x.title)}</span><span class="s">${esc(sub)}</span></span>
-    <span class="side">${x.key ? keyHTML(x.key) : ""}${tempo ? `<small>${esc(tempo)}</small>` : ""}</span></a></li>`;
+  return songRow({ href: setHref(str, name, i), attrs: `data-seti="${i}"`, n: i + 1, title: x.title, sub: x.state === "ok" ? "" : setSub(it, x),
+    key: x.key, bpm: x.song && x.song.meta.tempo, cls: (cur ? " cur" : "") + (x.state === "err" ? " bad" : "") });
 }
 function pageSet(info, q) {
   const name = q.n || "", items = info.items;
-  document.title = `${name || "Сет"} — Faworship Charts`;
+  document.title = `${name || "Сет"} — ChartSet`;
   const rows = items.map((it, i) => setRow(it, i, info.str, name)).join("");
   const xs = items.map(setSong);
   if (items.length) rememberSet(info.str, name, xs.map((x) => (x.state === "ok" || x.state === "none" ? x.title : "")));
@@ -1041,10 +1060,9 @@ function pageSet(info, q) {
       <span class="ctitle" style="cursor:default"><span>${esc(name || "Сет")}</span></span>
       <a class="sq" href="#setedit/${info.str}${setQ(name)}">Изменить</a></div></header>
     <main class="wrap screen">
-      ${items.length ? `<p class="setsum">${plural(items.length, ["песня", "песни", "песен"])}${charts < items.length ? ` · с чартом ${charts}` : ""}</p>
+      ${items.length ? `<p class="setsum">${plural(items.length, ["песня", "песни", "песен"])}${charts < items.length ? `, с чартом ${charts}` : ""}</p>
       <ul class="rows">${rows}</ul>
-      <div class="tools" style="margin-top:18px"><a class="btn" href="${setHref(info.str, name, 0)}">Открыть первую</a><button class="btn ghost" data-share>${I.link}Ссылка на сет</button></div>
-      <p class="hint">${SET_NOTE}</p>`
+      <div class="dock"><a class="btn big" href="${setHref(info.str, name, 0)}">Играть с первой</a><button class="sq big" data-share aria-label="Ссылка на сет">${I.link}</button></div>`
       : `<div class="notice bad"><b>В ссылке нет ни одной песни.</b><span>Возможно, её обрезал мессенджер.</span><a class="btn" href="#setedit">Собрать сет</a></div>`}
     </main>` + linkSheet();
   $$("[data-share]").forEach((b) => b.onclick = () => showLink((CONFIG.site || location.href.split("#")[0]) + "#" + info.route + setQ(name), SET_NOTE));
@@ -1106,7 +1124,7 @@ let seDraft = "", seFind = "", seOpen, pkWas = null;
 function pageSetEdit(str, q) {
   const name = q.n || "", items = setParse(str);
   const act = document.activeElement, fid = act && act.id, sel = fid && [act.selectionStart, act.selectionEnd];
-  document.title = "Сборка сета — Faworship Charts";
+  document.title = "Сборка сета — ChartSet";
   const put = (its, rerender = true) => {
     const h = `setedit/${setStr(its)}${setQ($("#se-name").value.trim())}`;
     history.replaceState(null, "", "#" + h); lastRoute = h;
@@ -1136,27 +1154,27 @@ function pageSetEdit(str, q) {
   const tops = open && open.lib && libTops(open.lib.songs);
   const pick = !open ? [] : open.lib
     ? libFilter(open.lib.songs.map(libSong), seFind).map((x) => ({ key: "d:" + x.id, route: x.id, title: x.title, sub: libSub(x, tops), songKey: x.song && x.song.meta.key, tempo: x.song && x.song.meta.tempo }))
-    : recs.map((r) => ({ key: r.key, route: r.route, title: r.title, sub: [r.artist, FROM[r.from]].filter(Boolean).join(" · "), songKey: r.songKey, tempo: parseCho(r.text || "").meta.tempo }));
+    : recs.map((r) => ({ key: r.key, route: r.route, title: r.title, sub: "", songKey: r.songKey, tempo: metaOf(r.text, "tempo") }));
   const pkRow = (x) => {
-    const k = parseKey(x.songKey), on = inSet.has(x.key);
-    return `<li><button class="pk-row" data-pick="${esc(x.route)}" ${on ? "disabled" : ""} aria-label="${on ? "Уже в сете" : "Добавить в сет"}: ${esc(x.title)}">${tile(x.title)}<span class="txt"><span class="t">${esc(x.title)}</span><span class="s">${esc(x.sub)}</span></span>
-      <span class="side">${k ? keyHTML(k) : esc(x.songKey || "")}${x.tempo ? `<small>${esc(x.tempo)}</small>` : ""}</span><span class="pk-add">${on ? I.check : I.plus}</span></button></li>`;
+    const on = inSet.has(x.key);
+    return `<li><button class="pk-row" data-pick="${esc(x.route)}" ${on ? "disabled" : ""} aria-label="${on ? "Уже в сете" : "Добавить в сет"}: ${esc(x.title)}"><span class="txt"><span class="t">${esc(x.title)}</span>${x.sub ? `<span class="s">${esc(x.sub)}</span>` : ""}</span>
+      ${keyChip(x.songKey)}<span class="bpm">${esc(x.tempo || "")}</span><span class="pk-add">${on ? I.check : I.plus}</span></button></li>`;
   };
   const pkSec = (s) => {
     const on = s === open;
-    return `<section class="pick-sec"><button class="pk-h" data-pk="${esc(s.id)}" aria-expanded="${on}">${s.lib ? tile(s.name) : `<span class="pk-ic">${I.clock}</span>`}
-      <span><b>${esc(s.name)}</b><small>${plural(s.n, ["песня", "песни", "песен"])}${s.lib && libRun[s.id] && !libRun[s.id].err ? " · обновляю…" : ""}</small></span>${I.chev}</button>
+    return `<section class="pick-sec"><button class="pk-h" data-pk="${esc(s.id)}" aria-expanded="${on}"><span class="pk-ic">${s.lib ? I.folder : I.clock}</span>
+      <span><b>${esc(s.name)}</b><small>${plural(s.n, ["песня", "песни", "песен"])}${s.lib && libRun[s.id] && !libRun[s.id].err ? ", обновляю…" : ""}</small></span>${I.chev}</button>
       ${on ? `<div class="pk-body">${s.lib && s.n > 6 ? `<div class="pk-find"><input class="md-in big" id="se-find" type="search" value="${esc(seFind)}" placeholder="Поиск по названию и словам" autocomplete="off" aria-label="Поиск в библиотеке"></div>` : ""}
         <ul class="pk-list" id="pk-list">${pick.map(pkRow).join("") || `<li class="pk-empty">${seFind.trim() ? "Ничего не нашлось." : "В библиотеке пока нет чартов .cho."}</li>`}</ul></div>` : ""}</section>`;
   };
   // перерисовка после добавления не должна сбрасывать прокрутку списка
   const pl0 = $("#pk-list"), pkTop = pl0 && pkWas === seOpen ? pl0.scrollTop : 0;
   app.innerHTML = `<header class="cbar"><div class="wrap cbar-row"><a class="ib" href="${items.length ? setHref(setStr(items), name) : "#"}" ${items.length ? "data-setlink" : ""} aria-label="Назад">${I.back}</a>
-      <span class="ctitle" style="cursor:default"><span>${str || name ? "Сет · правка" : "Новый сет"}</span></span>
+      <span class="ctitle" style="cursor:default"><span>${str || name ? "Правка сета" : "Новый сет"}</span></span>
       <a class="sq" href="${setHref(setStr(items), name)}" data-setlink ${items.length ? "" : 'aria-disabled="true" style="opacity:.35;pointer-events:none"'}>Готово</a></div></header>
     <main class="wrap screen">
       <div class="grp"><label for="se-name">Название</label><input class="md-in big" id="se-name" value="${esc(name)}" placeholder="Например, Воскресенье, 1 ноября" autocomplete="off"></div>
-      <div class="grp"><span class="lab">Песни${items.length ? " · " + items.length : ""}</span>
+      <div class="grp"><span class="lab">Песни${items.length ? ` <span class="muted">${items.length}</span>` : ""}</span>
         ${items.length ? `<ol class="slist">${rows}</ol>` : '<p class="hint" style="margin:0">Пока пусто — добавь песни ниже.</p>'}</div>
       <div class="grp"><label for="se-add">Добавить песни</label>
         <textarea class="md-in big" id="se-add" rows="4" placeholder="Ссылки на файлы .cho или названия — по одной в строке.&#10;Можно вставить список из графика: «1. Стою | G | 148»">${esc(seDraft)}</textarea>
@@ -1247,12 +1265,12 @@ function libSong(s) {
   const song = s.text ? parseCho(s.text) : null;
   return { ...s, song, title: (song && song.meta.title) || s.file.replace(/\.cho$/i, ""), route: s.text ? driveRoute(s.text, s.id) : s.id };
 }
-// подпись: исполнитель, «черновик ИИ»; если в библиотеке несколько верхних папок (корень с BIXCloud и AI базой) — ещё и папка
-const libTops = (songs) => new Set(songs.map((s) => s.folder.split(" / ")[0])).size > 1;
+// подпись: «черновик ИИ»; если песни лежат в нескольких верхних папках со своими папками песен внутри (корень с BIXCloud и AI базой) — ещё и верхняя папка
+const libTops = (songs) => songs.some((s) => s.folder.includes(" / ")) && new Set(songs.map((s) => s.folder.split(" / ")[0])).size > 1;
 function libSub(x, tops) {
   if (!x.song) return x.err || "чарт не загрузился";
   const st = { ai: "черновик ИИ", draft: "черновик" }[x.song.meta.status];
-  return [x.song.meta.artist, st, tops && x.folder.split(" / ")[0]].filter(Boolean).join(" · ") || x.folder || "Google Диск";
+  return [st, tops && x.folder.split(" / ")[0]].filter(Boolean).join(", ");
 }
 const libAll = () => { const seen = new Set(); return libs().flatMap((l) => l.songs).filter((s) => !seen.has(s.id) && seen.add(s.id)).map(libSong); };
 // поиск: каждое слово запроса — в названии, исполнителе, имени файла или словах песни (без аккордов и команд ChordPro)
@@ -1342,10 +1360,8 @@ async function libScan(id) {
 let libFind = "", libFindFor = null;
 const LIB_NOTE = "Ссылка ведёт на папку на Google Диске: по ней видны все чарты .cho из этой папки и из папок внутри. Новые чарты появятся в библиотеке сами — ссылка не меняется.";
 function libRow(x, busy, tops) {
-  const k = x.song && parseKey(x.song.meta.key), tempo = x.song && x.song.meta.tempo;
   const sub = x.song || x.err || !busy ? libSub(x, tops) : "загружаю…";
-  return `<li class="row${!x.song && (x.err || !busy) ? " bad" : ""}"><a href="#${esc(x.route)}">${tile(x.title)}<span class="txt"><span class="t">${esc(x.title)}</span><span class="s">${esc(sub)}</span></span>
-    <span class="side">${k ? keyHTML(k) : ""}${tempo ? `<small>${esc(tempo)}</small>` : ""}</span></a></li>`;
+  return songRow({ href: "#" + esc(x.route), title: x.title, sub, key: x.song && x.song.meta.key, bpm: x.song && x.song.meta.tempo, cls: !x.song && (x.err || !busy) ? " bad" : "" });
 }
 function pageLib(id) {
   const old = libGet(id);
@@ -1354,11 +1370,11 @@ function pageLib(id) {
   const lib = libGet(id), run = libRun[id], busy = !!run && !run.err;
   const act = document.activeElement, fid = act && act.id, sel = fid && [act.selectionStart, act.selectionEnd];
   const name = lib ? lib.name : "Библиотека";
-  document.title = `${name} — Faworship Charts`;
+  document.title = `${name} — ChartSet`;
   if (lib && lastRoute !== "lib/" + libRoute(lib)) { lastRoute = "lib/" + libRoute(lib); history.replaceState(null, "", "#" + lastRoute); }
   const all = lib ? lib.songs.map(libSong) : [], list = libFilter(all, libFind), tops = libTops(all);
   const status = !lib ? (busy ? "Ищу чарты в папке…" : "")
-    : [plural(all.length, ["песня", "песни", "песен"]), busy ? (run.of ? `загружаю чарты: ${run.n} из ${run.of}` : "обновляю…") : lib.at ? "обновлено " + when(lib.at) : ""].filter(Boolean).join(" · ");
+    : [plural(all.length, ["песня", "песни", "песен"]), busy ? (run.of ? `загружаю чарты: ${run.n} из ${run.of}` : "обновляю…") : lib.at ? "обновлено " + when(lib.at) : ""].filter(Boolean).join(", ");
   app.innerHTML = `<header class="cbar"><div class="wrap cbar-row"><a class="ib" href="#" aria-label="На главную">${I.back}</a>
       <span class="ctitle" style="cursor:default"><span>${esc(name)}</span></span>
       <button class="sq" id="lib-upd" ${busy ? "disabled" : ""}>Обновить</button></div></header>
@@ -1541,7 +1557,7 @@ function pageEdit(info) {
     ed.banner = d && d.text !== ed.orig ? d : null;
   }
   const isNew = info.from === "new";
-  document.title = `${isNew ? "Новый чарт" : "Правка · " + (ed.doc.head.title || "песня")} — Faworship Charts`;
+  document.title = `${isNew ? "Новый чарт" : "Правка · " + (ed.doc.head.title || "песня")} — ChartSet`;
   app.innerHTML = `<header class="cbar"><div class="wrap edwrap cbar-row">
       <a class="ib" href="${isNew ? "#" : "#" + info.route}" aria-label="Назад">${I.back}</a>
       <span class="ctitle" style="cursor:default"><span>${isNew ? "Новый чарт" : "Правка · " + esc(ed.doc.head.title || "песня")}</span></span>
@@ -1836,7 +1852,7 @@ function pagePrint(info, opts) {
   const status = { verified: "Проверен", ai: "Черновик ИИ — не проверен", draft: "Черновик" }[song.meta.status] || "";
   const sel = (id, val, opts2) => `<div class="selw"><select id="${id}">${opts2.map(([v, t]) => `<option value="${v}" ${String(val) === v ? "selected" : ""}>${t}</option>`).join("")}</select>${I.chev}</div>`;
   app.innerHTML = `<header class="cbar"><div class="wrap edwrap cbar-row"><a class="ib" href="${fromEd ? "#edit/" + info.route : "#" + info.route}" aria-label="Назад">${I.back}</a>
-      <span class="ctitle" style="cursor:default"><span>PDF · ${esc(title)}</span></span><button class="sq" id="pv-dl">Скачать PDF</button></div></header>
+      <span class="ctitle" style="cursor:default"><span>PDF: ${esc(title)}</span></span><button class="sq" id="pv-dl">Скачать PDF</button></div></header>
     <div class="wrap edwrap pv">
       <div class="pv-opts">
         <div class="grp"><label for="pv-view">Вид</label>${sel("pv-view", P.view, Object.entries(VIEW_RU).map(([v, t]) => [v, t[0].toUpperCase() + t.slice(1)]))}</div>
@@ -2018,7 +2034,7 @@ async function pdfFile() {
       }
     }
   }
-  pdf.setTitle(pdfName); pdf.setCreator("faworship.github.io"); pdf.setProducer("Faworship Charts"); pdf.setLanguage("ru");
+  pdf.setTitle(pdfName); pdf.setCreator("faworship.github.io"); pdf.setProducer("ChartSet"); pdf.setLanguage("ru");
   return pdf.save();
 }
 // На телефоне — меню «Поделиться» (на iPhone скачанный PDF открывается вкладкой, и неясно, как его сохранить), на компьютере — скачивание.
