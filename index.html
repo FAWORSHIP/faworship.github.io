@@ -343,7 +343,7 @@ textarea.md-in { display: block; resize: vertical; font-family: inherit; line-he
 (() => {
 // Настройка сайта: ключ Google Drive API (в консоли Google ограничен адресом сайта и только Drive API) и адрес сайта для ссылок «поделиться»
 // Версия сайта: исправление — +0.0.1, новая возможность — +0.1.0. Поднимать при каждой выкладке, история — docs/05-tools.md
-const VERSION = "1.6.1";
+const VERSION = "1.7.0";
 const CONFIG = { driveKey: "AIzaSyBNtYHwkI9bE6d7V0TnHEMMbKZCoSr49As", site: "https://faworship.github.io/" };
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -561,7 +561,7 @@ const when = (at) => new Date(at).toLocaleString("ru-RU", { day: "numeric", mont
 
 // ---------- откуда чарт: Google Диск, файл по ссылке (GitHub, Dropbox…), файл с устройства, ссылка с чартом внутри, пример ----------
 // маршруты: #<slug>.<id файла на Диске>?key=D · #url/<адрес файла в base64url> · #file/<id> · #t/<сжатый чарт> · #demo · #edit/<…> · #print/<…>~опции
-// сеты: #set/<песни>?n=Название · #set/<песни>/2 — песня сета · #setedit/<песни> — сборка
+// сеты: #set/<песни>?n=Название · #set/<песни>/2 — песня сета · #setedit/<песни> — сборка · библиотека: #lib/<slug>.<id папки на Диске>
 const TR = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s",
   т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sch", ъ: "-", ы: "y", ь: "-", э: "e", ю: "yu", я: "ya" };
 const slug = (s) => [...String(s).toLowerCase()].map((c) => TR[c] ?? c).join("").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -624,7 +624,7 @@ function srcInfo(r) {
   return null;
 }
 
-// ссылка, которую вставили: на файл Google Диска, на песню или сет этого сайта, на файл в GitHub, Dropbox или где угодно
+// ссылка, которую вставили: на файл или папку Google Диска, на песню, сет или библиотеку этого сайта, на файл в GitHub, Dropbox или где угодно
 const rawUrl = (u) => {
   const m = /^https?:\/\/github\.com\/([^/]+\/[^/]+)\/(?:blob|raw)\/(.+)$/.exec(u);
   if (m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}`;
@@ -636,13 +636,14 @@ function parseLink(s) {
   let m;
   const own = s.startsWith("#") || [CONFIG.site, location.origin + location.pathname].some((b) => b && s.startsWith(b + "#"));
   if (own && (m = /#(set\/[^?\s/]*)(?:\/\d+)?(?:\?n=([^&\s]*))?/.exec(s))) { let n = ""; try { n = decodeURIComponent(m[2] || ""); } catch {} return { set: m[1].slice(4), name: n }; }
+  if (own && (m = /#lib\/(?:[a-z0-9-]*\.)?([\w-]{20,})/.exec(s))) return { lib: m[1] };
   if (own) {
-    if (!(m = /#([^?\s]+)(?:\?key=([^&\s]*))?/.exec(s)) || !srcInfo(m[1])) return { err: "Это ссылка на сайт, но не на песню и не на сет" };
+    if (!(m = /#([^?\s]+)(?:\?key=([^&\s]*))?/.exec(s)) || !srcInfo(m[1])) return { err: "Это ссылка на сайт, но не на песню, сет или библиотеку" };
     let k = ""; try { k = decodeURIComponent(m[2] || ""); } catch {}
     return { route: m[1], key: k };
   }
   if (/(drive|docs)\.google\.com/.test(s)) {
-    if (/\/folders\//.test(s)) return { err: "Это ссылка на папку — нужна ссылка на сам файл .cho" };
+    if (/\/folders\//.test(s)) return (m = /\/folders\/([\w-]{20,})/.exec(s)) ? { lib: m[1] } : { err: "Не похоже на ссылку на папку Google Диска" };
     m = /\/d\/([\w-]{20,})/.exec(s) || /[?&]id=([\w-]{20,})/.exec(s);
     return m ? { route: m[1] } : { err: "Не похоже на ссылку на файл Google Диска" };
   }
@@ -716,7 +717,7 @@ function need(info) {
   if (info.from === "demo") return (mem[k] = { text: DEMO });
   if (info.from === "file") { const r = recentGet(k); return (mem[k] = r ? { text: r.text } : { err: { msg: "Этого файла нет в недавних на этом устройстве — открой его заново." } }); }
   if (loading[k]) return null;
-  const cached = info.from === "drive" || info.from === "url" ? recentGet(k) : null;
+  const cached = info.from === "drive" || info.from === "url" ? recentGet(k) || (info.from === "drive" && libCopy(info.id)) : null;
   loading[k] = (info.from === "link" ? unpack(info.data) : info.from === "url" ? urlText(info.url) : driveText(info.id)).then((text) => {
     const prev = mem[k]; mem[k] = { text };
     remember(info, text, info.from === "drive" ? driveRoute(text, info.id) : info.route);
@@ -732,6 +733,7 @@ function openLink(s) {
   const l = parseLink(s);
   if (l.err) return toast(l.err);
   if (l.set != null) return go("#set/" + l.set + (l.name ? "?n=" + encodeURIComponent(l.name) : ""));
+  if (l.lib) return go("#lib/" + l.lib);
   go("#" + l.route + (l.key ? "?key=" + encodeURIComponent(l.key) : ""));
 }
 function openLocal(text, name) {
@@ -832,11 +834,11 @@ const recentRow = (r) => `<li class="row"><a href="#${esc(r.route)}">${tile(r.ti
 
 function pageHome() {
   document.title = "Faworship Charts";
-  const rec = recent(), sets = recentSets();
+  const rec = recent(), sets = recentSets(), ls = libs();
   app.innerHTML = `<div class="screen"><div class="wrap lhead"><div class="lhead-row"><h1>Чарты</h1><button class="sq" id="prefb" aria-label="Настройки">${I.gear}</button></div></div>
     <div class="wrap">
-      <form class="dform" id="h-drive"><input id="h-link" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ссылка на .cho или на сет" aria-label="Ссылка на файл .cho или на сет"><button class="btn" type="submit">Открыть</button></form>
-      <p class="hint">Google Диск: файл .cho → «Поделиться» → «Копировать ссылку», доступ — «Все, у кого есть ссылка». Подходят и ссылки на файлы в GitHub и Dropbox.</p>
+      <form class="dform" id="h-drive"><input id="h-link" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ссылка на .cho, сет или папку" aria-label="Ссылка на файл .cho, сет или папку с песнями"><button class="btn" type="submit">Открыть</button></form>
+      <p class="hint">Google Диск: файл .cho → «Поделиться» → «Копировать ссылку», доступ — «Все, у кого есть ссылка». Ссылка на папку откроет библиотеку — все .cho из неё. Подходят и ссылки на файлы в GitHub и Dropbox.</p>
       <div class="acts">
         <button class="act" id="h-file">${I.file}<b>Открыть файл</b><small>.cho с телефона или компьютера</small></button>
         <a class="act" href="#setedit">${I.list}<b>Собрать сет</b><small>песни сета одной ссылкой</small></a>
@@ -844,11 +846,13 @@ function pageHome() {
         <a class="act" href="#demo">${I.note}<b>Пример</b><small>как выглядит чарт</small></a>
       </div>
       <input type="file" id="h-input" hidden>
+      ${ls.length ? `<div class="h2"><span>Библиотеки</span><button class="linkb" data-clear="${LIBS}">Очистить</button></div>
+      <ul class="rows">${ls.map((l) => `<li class="row"><a href="#lib/${esc(libRoute(l))}">${tile(l.name)}<span class="txt"><span class="t">${esc(l.name)}</span><span class="s">${plural(l.songs.length, ["песня", "песни", "песен"])}</span></span><span class="side">${l.at ? esc(new Date(l.at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })) : ""}</span></a></li>`).join("")}</ul>` : ""}
       ${sets.length ? `<div class="h2"><span>Сеты</span><button class="linkb" data-clear="${SETS}">Очистить</button></div>
       <ul class="rows">${sets.slice(0, 5).map((r) => `<li class="row"><a href="${setHref(r.str, r.name)}">${tile(r.name || "Сет", "tile", String(r.titles.length))}<span class="txt"><span class="t">${esc(r.name || "Сет")}</span><span class="s">${esc(r.titles.filter(Boolean).join(" · ") || plural(r.titles.length, ["песня", "песни", "песен"]))}</span></span><span class="side">${esc(new Date(r.at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" }))}</span></a></li>`).join("")}</ul>` : ""}
       <div class="h2"><span>Недавние</span>${rec.length ? `<button class="linkb" data-clear="${RECENT}">Очистить</button>` : ""}</div>
       <ul class="rows">${rec.map(recentRow).join("") || '<li class="empty">Здесь появятся чарты, которые ты открывал на этом устройстве.</li>'}</ul>
-      <div class="about"><span>Сайт ничего не хранит: чарты открываются по ссылке с Google Диска, GitHub или Dropbox, сет — это ссылка со списком песен. Настройки, «Сеты» и «Недавние» — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho). Версия ${VERSION}</span></div>
+      <div class="about"><span>Сайт ничего не хранит: чарты открываются по ссылке с Google Диска, GitHub или Dropbox, сет — это ссылка со списком песен, библиотека — ссылка на папку. Настройки, «Библиотеки», «Сеты» и «Недавние» — только на этом устройстве.</span><span>Формат чартов — ChordPro (.cho). Версия ${VERSION}</span></div>
     </div></div>` + prefsSheet();
   $("#prefb").onclick = () => { ui.sheet = "prefs"; render(); };
   $("#h-drive").onsubmit = (ev) => { ev.preventDefault(); openLink($("#h-link").value); };
@@ -856,7 +860,7 @@ function pageHome() {
   $("#h-input").onchange = async (ev) => { const f = ev.target.files[0]; if (f) openLocal(await f.text(), f.name); };
   $$("[data-clear]").forEach((c) => c.onclick = () => {
     if (!c.dataset.sure) { c.dataset.sure = "1"; c.textContent = "Точно очистить?"; return; }
-    try { localStorage.removeItem(c.dataset.clear); } catch {} render();
+    try { localStorage.removeItem(c.dataset.clear); } catch {} libsMemo = null; render();
   });
   bindSheets();
 }
@@ -874,7 +878,8 @@ function pageErr(info, err) {
 
 function pageSong(info, q, set) {
   const m = need(info);
-  if (!m) return pageWait(info, set ? setHref(set.str, set.name) : "#");
+  const back = set ? setHref(set.str, set.name) : cameFrom && cameFrom.startsWith("lib/") ? "#" + cameFrom : "#";
+  if (!m) return pageWait(info, back);
   if (m.err) return pageErr(info, m.err);
   const song = parseCho(m.text);
   const title = song.meta.title || song.meta.t || "Без названия";
@@ -908,7 +913,7 @@ function pageSong(info, q, set) {
   const right = `<button class="sq" id="keyb" aria-label="Тональность и capo" ${hasKey ? "" : "disabled"}>${hasKey ? keyHTML(target) : "—"}${ks.capo ? `<small>capo ${ks.capo}</small>` : ""}</button>
       <button class="sq" id="moreb" aria-label="Настройки чарта">${I.dots}</button>`;
   app.innerHTML = (set ? setBar(set, title, right) : `<header class="cbar"><div class="wrap chartwrap cbar-row">
-      <a class="ib" href="#" aria-label="На главную">${I.back}</a>
+      <a class="ib" href="${esc(back)}" aria-label="${back === "#" ? "На главную" : "В библиотеку"}">${I.back}</a>
       <span class="ctitle"><span>${esc(title)}</span></span>
       ${right}</div>`) + `${map}</header>
     <main class="wrap chartwrap" id="chartmain">${notice}
@@ -1062,7 +1067,7 @@ document.addEventListener("touchend", (ev) => {
 }, { passive: true });
 
 // ---------- сборка сета: ссылки на файлы или названия, тональности, порядок; всё — в адресе страницы ----------
-let seDraft = "";
+let seDraft = "", seFind = "";
 function pageSetEdit(str, q) {
   const name = q.n || "", items = setParse(str);
   const act = document.activeElement, fid = act && act.id, sel = fid && [act.selectionStart, act.selectionEnd];
@@ -1088,6 +1093,7 @@ function pageSetEdit(str, q) {
   }).join("");
   const inSet = new Set(items.map((it) => it.src && it.src.key));
   const rec = recent().filter((r) => (r.from === "drive" || r.from === "url") && !inSet.has(r.key)).slice(0, 12);
+  const lib = libAll(), found = seFind.trim() ? libFilter(lib.filter((x) => !inSet.has("d:" + x.id)), seFind).slice(0, 12) : [];
   app.innerHTML = `<header class="cbar"><div class="wrap cbar-row"><a class="ib" href="${items.length ? setHref(setStr(items), name) : "#"}" ${items.length ? "data-setlink" : ""} aria-label="Назад">${I.back}</a>
       <span class="ctitle" style="cursor:default"><span>${str || name ? "Сет · правка" : "Новый сет"}</span></span>
       <a class="sq" href="${setHref(setStr(items), name)}" data-setlink ${items.length ? "" : 'aria-disabled="true" style="opacity:.35;pointer-events:none"'}>Готово</a></div></header>
@@ -1098,7 +1104,9 @@ function pageSetEdit(str, q) {
       <div class="grp"><label for="se-add">Добавить песни</label>
         <textarea class="md-in big" id="se-add" rows="4" placeholder="Ссылки на файлы .cho или названия — по одной в строке.&#10;Можно вставить список из графика: «1. Стою | G | 148»">${esc(seDraft)}</textarea>
         <div class="tools" style="margin-top:8px"><button class="btn" id="se-addb">Добавить</button></div>
-        <p class="hint">Ссылка — на файл .cho на Google Диске («Все, у кого есть ссылка»), в GitHub или Dropbox, на песню или другой сет этого сайта. Название без ссылки станет песней без чарта, если такой песни нет в «Недавних».</p></div>
+        <p class="hint">Ссылка — на файл .cho на Google Диске («Все, у кого есть ссылка»), в GitHub или Dropbox, на песню или другой сет этого сайта. Название без ссылки станет песней без чарта, если такой песни нет в библиотеке и в «Недавних».</p></div>
+      ${lib.length ? `<div class="grp"><label for="se-find">Из библиотеки</label><input class="md-in big" id="se-find" type="search" value="${esc(seFind)}" placeholder="Название или слова песни" autocomplete="off">
+        ${seFind.trim() ? `<div class="tools" style="margin-top:8px">${found.map((x) => `<button class="tool" data-lib="${esc(x.id)}">+ ${esc(x.title)}</button>`).join("") || '<span class="hint" style="margin:0">Ничего не нашлось</span>'}</div>` : ""}</div>` : ""}
       ${rec.length ? `<div class="grp"><span class="lab">Из недавних</span><div class="tools">${rec.map((r) => `<button class="tool" data-rec="${esc(r.key)}">+ ${esc(r.title)}</button>`).join("")}</div></div>` : ""}
       ${items.length ? `<div class="tools" style="margin-top:22px"><a class="btn" href="${setHref(setStr(items), name)}" data-setlink>Открыть сет</a><button class="btn ghost" data-share>${I.link}Ссылка на сет</button></div>
       <p class="hint">${SET_NOTE} Ссылку можно вставить в график или скинуть в чат.</p>` : ""}
@@ -1120,17 +1128,20 @@ function pageSetEdit(str, q) {
   $$("[data-mv]").forEach((b) => b.onclick = () => { const i = +b.dataset.mv, j = i + +b.dataset.d; [items[i], items[j]] = [items[j], items[i]]; put(items); });
   $$("[data-rm]").forEach((b) => b.onclick = () => { items.splice(+b.dataset.rm, 1); put(items); });
   $$("[data-rec]").forEach((b) => b.onclick = () => { const r = recentGet(b.dataset.rec); const info = r && srcInfo(r.route); if (info) put([...items, { src: info, key: "" }]); });
+  const sf = $("#se-find"); if (sf) sf.oninput = () => { seFind = sf.value; render(); };
+  $$("[data-lib]").forEach((b) => b.onclick = () => put([...items, { src: srcInfo(b.dataset.lib), key: "" }]));
   $$("[data-share]").forEach((b) => b.onclick = () => showLink((CONFIG.site || location.href.split("#")[0]) + setHref(setStr(items), $("#se-name").value.trim()), SET_NOTE));
   bindSheets();
   // перерисовка (догрузилась песня) не должна сбивать набор текста
   const f = fid && document.getElementById(fid);
   if (f && (f.tagName === "INPUT" || f.tagName === "TEXTAREA")) { f.focus({ preventScroll: true }); try { f.setSelectionRange(...sel); } catch {} }
 }
-// строки из поля «Добавить»: ссылка → песня с файла, «1. Стою | G | 148» → песня из «Недавних» с тем же названием или песня без чарта.
-// Ячейку графика Google Таблицы копируют в кавычках; если строки пронумерованы, строки без номера («СБОРНИК: …») остаются в поле
+// строки из поля «Добавить»: ссылка → песня с файла, «1. Стою | G | 148» → песня из «Недавних» или библиотеки с тем же названием
+// (или именем файла) либо песня без чарта. Ячейку графика Google Таблицы копируют в кавычках; если строки пронумерованы,
+// строки без номера («СБОРНИК: …») остаются в поле
 function setLines(text) {
   const add = [], bad = [];
-  const rec = recent().filter((r) => r.from === "drive" || r.from === "url");
+  const rec = [...recent().filter((r) => r.from === "drive" || r.from === "url"), ...libAll()];
   const lines = text.split("\n").map((l) => l.trim().replace(/^"|"$/g, "").replace(/""/g, '"').trim()).filter(Boolean);
   const numbered = lines.some((l) => /^\d+\s*[.)]/.test(l));
   for (const line of lines) {
@@ -1138,6 +1149,7 @@ function setLines(text) {
       const l = parseLink(line), info = l.route && srcInfo(l.route);
       if (l.err) bad.push({ line, err: l.err });
       else if (l.set != null) add.push(...setParse(l.set));
+      else if (l.lib) bad.push({ line, err: "Это ссылка на папку — её песни можно добавить из библиотеки: открой ссылку на главной" });
       else if (info && (info.from === "drive" || info.from === "url")) add.push({ src: info, key: l.key ? keyPlain(parseKey(l.key) || { pc: 0 }) : "" });
       else bad.push({ line, err: "В сет добавляются ссылки на файлы, а не чарты внутри ссылки" });
       continue;
@@ -1147,10 +1159,159 @@ function setLines(text) {
     const title = parts[0].trim(); if (!title) continue;
     const k = parts.slice(1).map((p) => p.trim()).find((p) => /^[A-H][#b]?m?$/.test(p));
     const key = k ? keyPlain(parseKey(k)) : "";
-    const hit = rec.find((r) => normT(r.title) === normT(title)), info = hit && srcInfo(hit.route);
+    const t = normT(title), hit = rec.find((r) => normT(r.title) === t || (r.file && normT(r.file.replace(/\.cho$/i, "")) === t)), info = hit && srcInfo(hit.route);
     add.push(info ? { src: info, key } : { title, key });
   }
   return { add, bad };
+}
+
+// ---------- библиотека: папка Google Диска — все .cho в ней, в папках внутри и на уровень глубже ----------
+// #lib/<slug>.<id папки>. Список и копии чартов хранятся только в этом браузере: открываются сразу и без связи, а при открытии
+// библиотеки сайт сверяется с Диском. С ключом API Диск отвечает только на запрос по одной папке, поэтому папки одного уровня
+// спрашиваются пачкой (batch, до 100 запросов в одном), а чарты скачиваются только новые и изменённые.
+const LIBS = "fw-libs", LIB_DEPTH = 2, LIB_FRESH = 10 * 60000, FOLDER = "application/vnd.google-apps.folder";
+let libsMemo = null;
+function libs() { if (!libsMemo) try { libsMemo = JSON.parse(localStorage.getItem(LIBS) || "[]"); } catch { libsMemo = []; } return libsMemo; }
+window.addEventListener("storage", (ev) => { if (ev.key === LIBS || ev.key === null) libsMemo = null; });
+const libGet = (id) => libs().find((l) => l.id === id);
+function libPut(lib) {
+  libsMemo = [lib, ...libs().filter((l) => l.id !== lib.id)];
+  try { localStorage.setItem(LIBS, JSON.stringify(libsMemo)); } catch {}
+}
+const libRoute = (l) => (slug(l.name) ? slug(l.name) + "." : "") + l.id;
+// копия чарта из библиотеки: песня открывается сразу, пока сайт загружает свежую с Диска
+function libCopy(id) { for (const l of libs()) { const s = l.songs.find((x) => x.id === id && x.text); if (s) return { text: s.text, at: l.at }; } return null; }
+// песня библиотеки: название и шапка — из чарта, пока он не загружен — из имени файла
+function libSong(s) {
+  const song = s.text ? parseCho(s.text) : null;
+  return { ...s, song, title: (song && song.meta.title) || s.file.replace(/\.cho$/i, ""), route: s.text ? driveRoute(s.text, s.id) : s.id };
+}
+const libAll = () => { const seen = new Set(); return libs().flatMap((l) => l.songs).filter((s) => !seen.has(s.id) && seen.add(s.id)).map(libSong); };
+// поиск: каждое слово запроса — в названии, исполнителе, имени файла или словах песни (без аккордов и команд ChordPro)
+const normS = (s) => String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const hays = new Map();
+function libHay(x) {
+  const k = x.id + x.mod + !!x.text;
+  if (!hays.has(k)) hays.set(k, normS([x.title, x.song && x.song.meta.artist, x.file, (x.text || "").replace(/^\s*[{#].*$/gm, " ").replace(/\[[^\]]*\]/g, "")].join(" ")));
+  return hays.get(k);
+}
+function libFilter(list, q) {
+  const words = normS(q).split(" ").filter(Boolean);
+  return list.filter((x) => words.every((w) => libHay(x).includes(w))).sort((a, b) => a.title.localeCompare(b.title, "ru"));
+}
+
+// пачка запросов к Drive API одним запросом; ответ — multipart, части помечены номером запроса
+async function driveBatch(paths) {
+  const b = "fw" + Math.random().toString(36).slice(2), out = paths.map(() => null);
+  const body = paths.map((p, i) => `--${b}\r\nContent-Type: application/http\r\nContent-ID: <${i}>\r\n\r\nGET ${p}\r\n\r\n`).join("") + `--${b}--`;
+  let r;
+  try { r = await fetch(`https://www.googleapis.com/batch/drive/v3?key=${CONFIG.driveKey}`, { method: "POST", headers: { "Content-Type": "multipart/mixed; boundary=" + b }, body }); }
+  catch { throw { msg: "Нет связи с Google Диском." }; }
+  if (!r.ok) throw { msg: `Google Диск ответил ошибкой ${r.status}.` };
+  const rb = (/boundary=([^;\s]+)/.exec(r.headers.get("Content-Type") || "") || [])[1];
+  for (const part of (await r.text()).split("--" + rb)) {
+    const n = /Content-ID:\s*<response-(\d+)>/i.exec(part);
+    if (!n || +n[1] >= out.length) continue;
+    let data = null; try { data = JSON.parse(part.slice(part.indexOf("{"), part.lastIndexOf("}") + 1)); } catch {}
+    out[+n[1]] = { status: +((/HTTP\/[\d.]+ (\d+)/.exec(part) || [])[1] || 0), data };
+  }
+  return out;
+}
+const listPath = (id) => "/drive/v3/files?" + new URLSearchParams({ q: `'${id}' in parents and trashed = false`, fields: "files(id,name,mimeType,modifiedTime,shortcutDetails)",
+  pageSize: 1000, supportsAllDrives: true, includeItemsFromAllDrives: true });
+
+const libRun = {}; // идёт обновление: { n, of } — сколько чартов загружено из скольких; err — не получилось
+let libT = null;
+const libRender = () => { if (!libT) libT = setTimeout(() => { libT = null; if (location.hash.startsWith("#lib/")) render(); }, 200); };
+async function libScan(id) {
+  if (libRun[id] && !libRun[id].err) return;
+  const run = libRun[id] = {};
+  try {
+    if (!CONFIG.driveKey) throw { msg: "На сайте ещё не задан ключ Google Drive API, поэтому папки с Диска пока не открываются." };
+    const [meta, root] = await driveBatch([`/drive/v3/files/${id}?fields=name,mimeType&supportsAllDrives=true`, listPath(id)]);
+    const why = (x) => x && x.data && x.data.error && x.data.error.message;
+    if (!meta || meta.status !== 200) throw meta && meta.status === 404 ? { msg: "Папка не найдена. Либо у неё закрыт доступ по ссылке, либо её удалили." }
+      : { msg: `Google Диск ответил ошибкой ${(meta && meta.status) || ""}.`, detail: why(meta) };
+    if (meta.data.mimeType !== FOLDER) throw { msg: "Это ссылка на файл, а не на папку. Файл .cho открывается ссылкой на главной." };
+    if (!root || root.status !== 200) throw { msg: "Google Диск не отдал содержимое папки. Проверь доступ: «Все, у кого есть ссылка».", detail: why(root) };
+    // обход по уровням: все папки уровня — одной пачкой; папку без доступа пропускаем
+    const found = new Map();
+    let level = [{ id, path: "" }], res = [root];
+    for (let depth = 0; ; depth++) {
+      const next = [];
+      level.forEach((d, i) => {
+        if (!res[i] || res[i].status !== 200) return;
+        for (const f of res[i].data.files || []) {
+          const sc = f.shortcutDetails, fid = sc ? sc.targetId : f.id;
+          if ((sc ? sc.targetMimeType : f.mimeType) === FOLDER) next.push({ id: fid, path: d.path ? d.path + " / " + f.name : f.name });
+          else if (/\.cho$/i.test(f.name) && !found.has(fid)) found.set(fid, { id: fid, file: f.name, folder: d.path, mod: f.modifiedTime });
+        }
+      });
+      if (!next.length || depth >= LIB_DEPTH) break;
+      level = next; res = [];
+      for (let i = 0; i < next.length; i += 100) res.push(...await driveBatch(next.slice(i, i + 100).map((d) => listPath(d.id))));
+    }
+    // чарты: неизменённые — из прошлой копии, остальные — с Диска, по 8 сразу
+    const old = libGet(id), prev = new Map((old ? old.songs : []).map((s) => [s.id, s]));
+    const songs = [...found.values()].map((s) => { const p = prev.get(s.id); return p && p.text && p.mod === s.mod ? { ...s, text: p.text } : s; });
+    const lib = { id, name: meta.data.name, at: old ? old.at : 0, songs }, todo = songs.filter((s) => !s.text);
+    run.n = 0; run.of = todo.length;
+    libPut(lib); libRender();
+    let i = 0;
+    await Promise.all(Array.from({ length: Math.min(8, todo.length) }, async () => {
+      while (i < todo.length) {
+        const s = todo[i++], p = prev.get(s.id);
+        try { s.text = await driveText(s.id); }
+        catch (e) { if (p && p.text) Object.assign(s, { text: p.text, mod: p.mod }); else s.err = (e && e.msg) || "Чарт не загрузился."; }
+        run.n++; libRender();
+      }
+    }));
+    lib.at = Date.now(); libPut(lib); delete libRun[id];
+  } catch (e) { run.err = e && e.msg ? e : { msg: "Не получилось прочитать папку.", detail: String(e) }; }
+  libRender();
+}
+
+let libFind = "", libFindFor = null;
+const LIB_NOTE = "Ссылка ведёт на папку на Google Диске: по ней видны все чарты .cho из этой папки и из папок внутри. Новые чарты появятся в библиотеке сами — ссылка не меняется.";
+function libRow(x, busy) {
+  const k = x.song && parseKey(x.song.meta.key), tempo = x.song && x.song.meta.tempo;
+  const st = x.song && { ai: "черновик ИИ", draft: "черновик" }[x.song.meta.status];
+  const sub = x.song ? [x.song.meta.artist, st].filter(Boolean).join(" · ") || x.folder || "Google Диск" : x.err || (busy ? "загружаю…" : "чарт не загрузился");
+  return `<li class="row${!x.song && (x.err || !busy) ? " bad" : ""}"><a href="#${esc(x.route)}">${tile(x.title)}<span class="txt"><span class="t">${esc(x.title)}</span><span class="s">${esc(sub)}</span></span>
+    <span class="side">${k ? keyHTML(k) : ""}${tempo ? `<small>${esc(tempo)}</small>` : ""}</span></a></li>`;
+}
+function pageLib(id) {
+  const old = libGet(id);
+  if (!libRun[id] && (!old || Date.now() - old.at > LIB_FRESH)) libScan(id);
+  if (libFindFor !== id) { libFind = ""; libFindFor = id; }
+  const lib = libGet(id), run = libRun[id], busy = !!run && !run.err;
+  const act = document.activeElement, fid = act && act.id, sel = fid && [act.selectionStart, act.selectionEnd];
+  const name = lib ? lib.name : "Библиотека";
+  document.title = `${name} — Faworship Charts`;
+  if (lib && lastRoute !== "lib/" + libRoute(lib)) { lastRoute = "lib/" + libRoute(lib); history.replaceState(null, "", "#" + lastRoute); }
+  const all = lib ? lib.songs.map(libSong) : [], list = libFilter(all, libFind);
+  const status = !lib ? (busy ? "Ищу чарты в папке…" : "")
+    : [plural(all.length, ["песня", "песни", "песен"]), busy ? (run.of ? `загружаю чарты: ${run.n} из ${run.of}` : "обновляю…") : lib.at ? "обновлено " + when(lib.at) : ""].filter(Boolean).join(" · ");
+  app.innerHTML = `<header class="cbar"><div class="wrap cbar-row"><a class="ib" href="#" aria-label="На главную">${I.back}</a>
+      <span class="ctitle" style="cursor:default"><span>${esc(name)}</span></span>
+      <button class="sq" id="lib-upd" ${busy ? "disabled" : ""}>Обновить</button></div></header>
+    <main class="wrap screen">
+      ${run && run.err ? `<div class="notice bad"><b>${esc(run.err.msg)}</b>${run.err.detail ? `<small>${esc(run.err.detail)}</small>` : ""}${lib && lib.at ? `<span>Показан список от ${when(lib.at)}.</span>` : ""}<button class="btn" id="lib-retry">Попробовать ещё раз</button></div>` : ""}
+      ${all.length ? `<div class="grp"><input class="md-in big" id="lib-q" type="search" value="${esc(libFind)}" placeholder="Название, исполнитель или слова" autocomplete="off" aria-label="Поиск по библиотеке"></div>` : ""}
+      ${status ? `<p class="setsum">${esc(status)}</p>` : ""}
+      ${all.length ? `<ul class="rows">${list.map((x) => libRow(x, busy)).join("") || '<li class="empty">Ничего не нашлось.</li>'}</ul>`
+        : lib && !busy ? `<div class="notice"><b>В папке нет чартов .cho.</b><span>Библиотека собирает файлы .cho из этой папки, из папок внутри неё и на уровень глубже — например, из папки песни. Доступ к файлам — «Все, у кого есть ссылка».</span></div>` : ""}
+      ${lib ? `<div class="tools" style="margin-top:22px"><button class="btn ghost" data-share>${I.link}Ссылка на библиотеку</button><a class="btn ghost" href="#setedit">Собрать сет</a></div>
+      <p class="hint">${LIB_NOTE}</p>` : ""}
+    </main>` + linkSheet();
+  const q = $("#lib-q"); if (q) q.oninput = () => { libFind = q.value; render(); };
+  $("#lib-upd").onclick = () => { delete libRun[id]; libScan(id); render(); };
+  const rt = $("#lib-retry"); if (rt) rt.onclick = $("#lib-upd").onclick;
+  $$("[data-share]").forEach((b) => b.onclick = () => showLink((CONFIG.site || location.href.split("#")[0]) + "#lib/" + libRoute(lib), LIB_NOTE));
+  bindSheets();
+  // перерисовка (догрузился чарт) не должна сбивать набор текста
+  const f = fid && document.getElementById(fid);
+  if (f && f.tagName === "INPUT") { f.focus({ preventScroll: true }); try { f.setSelectionRange(...sel); } catch {} }
 }
 
 
@@ -1889,10 +2050,10 @@ async function checkUpdate() {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdate(); });
 setInterval(checkUpdate, 10 * 60000);
 
-let lastRoute = null;
+let lastRoute = null, cameFrom = null; // cameFrom — откуда пришли: песня, открытая из библиотеки, возвращается в неё
 function render() {
   const h = location.hash.slice(1);
-  if (h !== lastRoute) ui.sheet = null;
+  if (h !== lastRoute) { ui.sheet = null; cameFrom = lastRoute; }
   const keep = h === lastRoute ? window.scrollY : 0;
   lastRoute = h;
   const [path, qs = ""] = h.split("?");
@@ -1902,6 +2063,7 @@ function render() {
   curSet = null;
   if ((m = /^setedit\/?([^/]*)$/.exec(path))) pageSetEdit(m[1], q);
   else if ((m = /^set\/([^/]*)(?:\/(\d+))?$/.exec(path))) { info = setInfo(m[1]); if (m[2]) pageSetSong(info, +m[2] - 1, q); else pageSet(info, q); }
+  else if ((m = /^lib\/(?:[a-z0-9-]*\.)?([\w-]{20,})$/.exec(path))) pageLib(m[1]);
   else if ((m = /^edit\/(.+)$/.exec(path)) && (info = srcInfo(m[1]))) pageEdit(info);
   else if ((m = /^print\/([^~]+)(.*)$/.exec(path)) && (info = srcInfo(m[1]))) pagePrint(info, m[2].split("~").filter(Boolean));
   else if (path && (info = srcInfo(path))) pageSong(info, q);
