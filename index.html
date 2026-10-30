@@ -343,7 +343,7 @@ textarea.md-in { display: block; resize: vertical; font-family: inherit; line-he
 (() => {
 // Настройка сайта: ключ Google Drive API (в консоли Google ограничен адресом сайта и только Drive API) и адрес сайта для ссылок «поделиться»
 // Версия сайта: исправление — +0.0.1, новая возможность — +0.1.0. Поднимать при каждой выкладке, история — docs/05-tools.md
-const VERSION = "1.7.0";
+const VERSION = "1.7.1";
 const CONFIG = { driveKey: "AIzaSyBNtYHwkI9bE6d7V0TnHEMMbKZCoSr49As", site: "https://faworship.github.io/" };
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -671,7 +671,12 @@ async function driveText(id) {
   if (r.ok) return await r.text();
   let detail = ""; try { detail = (await r.json()).error.message || ""; } catch {}
   if (r.status === 404) throw { msg: "Файл не найден. Либо у него закрыт доступ по ссылке, либо его удалили или загрузили заново — тогда у файла новый адрес и нужна новая ссылка.", detail };
-  if (/export/i.test(detail)) throw { msg: "Это Google Документ, а не файл .cho.", detail };
+  if (/export/i.test(detail)) {
+    // так Диск отвечает и на Google Документ, и на папку; по ссылке drive.google.com/open?id=… (её копирует Google Drive на компьютере) их не различить
+    let mime = ""; try { mime = (await (await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?fields=mimeType&supportsAllDrives=true&key=${CONFIG.driveKey}`)).json()).mimeType; } catch {}
+    if (mime === FOLDER) throw { msg: "Это папка, а не файл .cho — она открывается как библиотека.", folder: id };
+    throw { msg: "Это Google Документ, а не файл .cho.", detail };
+  }
   if (r.status === 403) throw { msg: "Google Диск отказал в доступе. Проверь доступ к файлу: «Все, у кого есть ссылка».", detail };
   throw { msg: `Google Диск ответил ошибкой ${r.status}.`, detail };
 }
@@ -880,6 +885,7 @@ function pageSong(info, q, set) {
   const m = need(info);
   const back = set ? setHref(set.str, set.name) : cameFrom && cameFrom.startsWith("lib/") ? "#" + cameFrom : "#";
   if (!m) return pageWait(info, back);
+  if (m.err && m.err.folder && !set) return location.replace("#lib/" + m.err.folder);
   if (m.err) return pageErr(info, m.err);
   const song = parseCho(m.text);
   const title = song.meta.title || song.meta.t || "Без названия";
